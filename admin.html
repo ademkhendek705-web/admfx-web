@@ -233,7 +233,13 @@ $("#list").onclick = e => {
 };
 $("#lf").onsubmit = async e => { // دخول حقيقي عبر Firebase Auth
   e.preventDefault(); $("#le").textContent = "";
-  if (!AZ.auth) { $("#le").textContent = "تعذّر تحميل Firebase Auth: افتح الصفحة عبر http (Live Server أو استضافة)."; return; }
+  if (!AZ.auth) { // تشخيص دقيق لسبب الفشل
+    $("#le").textContent = !("auth" in AZ) ? "ملف azador.js قديم: استبدله بالنسخة الجديدة ثم حدّث الصفحة."
+      : location.protocol === "file:" ? "الصفحة مفتوحة من ملف (file://). شغّلها عبر Live Server أو استضافة."
+      : typeof firebase === "undefined" || !firebase.auth ? "لم يُحمَّل Firebase: تحقق من الإنترنت أو من حجب gstatic.com."
+      : "تعذّرت تهيئة Firebase Auth: افتح Console (F12) وأرسل لي الخطأ.";
+    return;
+  }
   try { await AZ.auth.signInWithEmailAndPassword($("#em").value.trim(), $("#pw").value); }
   catch (err) { $("#le").textContent = /not-supported/.test(err.code) ? "افتح الصفحة عبر http/https (Live Server أو استضافة) وليس file://" : "البريد الإلكتروني أو كلمة السر غير صحيحة"; }
 };

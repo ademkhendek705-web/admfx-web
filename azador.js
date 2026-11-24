@@ -53,7 +53,7 @@ const AZ = (() => {
   if (hasFb) {
     firebase.initializeApp(FIREBASE_CONFIG);
     fs = firebase.firestore(); fs.settings({ experimentalAutoDetectLongPolling: true, merge: true });
-    if (firebase.auth) auth = firebase.auth();
+    try { if (firebase.auth) auth = firebase.auth(); } catch (e) { console.warn("Auth init:", e.code || e.message); }
   }
   const MSG = { ar: "تعذّر الحفظ، تحقق من الاتصال وأعد المحاولة", fr: "Échec de l’enregistrement, vérifie ta connexion", en: "Couldn’t save, check your connection" };
   const toast = m => { const d = document.createElement("div"); d.className = "toast"; d.setAttribute("role", "alert"); d.textContent = m; document.body.append(d); setTimeout(() => d.remove(), 4500); };
