@@ -40,7 +40,8 @@ th,td{padding:.65rem .9rem;text-align:start;border-block-end:1px solid var(--bd)
 <div id="login" class="wrap login">
   <form class="card" id="lf">
     <h2>AZADOR<span style="color:var(--primary)">-admin</span></h2>
-    <input type="password" id="pw" placeholder="كلمة السر" autocomplete="current-password" autofocus>
+    <input type="email" id="em" placeholder="البريد الإلكتروني" autocomplete="username" dir="ltr" autofocus>
+    <input type="password" id="pw" placeholder="كلمة السر" autocomplete="current-password">
     <button class="btn pri">دخول</button>
     <p class="err" id="le"></p>
   </form>
@@ -59,21 +60,26 @@ th,td{padding:.65rem .9rem;text-align:start;border-block-end:1px solid var(--bd)
   <main class="wrap">
     <section id="v-orders" class="ord"><aside class="card list" id="list"></aside><div class="card detail" id="detail"></div></section>
     <section id="v-finance" hidden>
-      <div class="card" style="margin-bottom:1rem"><label class="muted" style="display:grid;gap:.3rem">بيانات حساب CCP (تظهر للزبون في صفحة المتابعة قبل الدفع)<textarea id="ccp" rows="2" placeholder="الاسم + رقم الحساب CCP + المفتاح"></textarea></label></div>
+      <div class="card" style="margin-bottom:1rem"><h3>حسابك في CCP (يظهر للزبون في نافذة الشراء)</h3>
+        <div class="ctl" style="margin-top:.6rem"><label>رقم الحساب<input id="cn" dir="ltr" inputmode="numeric" maxlength="14"></label><label>المفتاح<input id="ck" dir="ltr" inputmode="numeric" maxlength="2"></label><label>الاسم (اسم ولقب)<input id="cm" maxlength="60"></label></div>
+        <p class="muted" id="cmsg" style="margin-top:.5rem"></p></div>
       <div id="finBody"></div>
     </section>
     <section id="v-stats" hidden></section>
   </main>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="azador.js"></script>
 <script>if(typeof AZ==="undefined")document.body.innerHTML='<p style="padding:2rem;font:700 18px/1.8 sans-serif;color:#ff6b7a;direction:rtl">ملف azador.js غير موجود. ضع index.html وclient.html وadmin.html وazador.js وazador.css كلها في نفس المجلد ثم حدّث الصفحة.</p>'</script>
 <script>
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const { DB, ST, esc, money, paid, waiting } = AZ;
-const PASS = "azador123"; // للتجربة فقط: الحماية الحقيقية ستكون عبر Firebase Auth
 const EMPTY = `<p class="muted" style="margin:auto">اختر طلباً من القائمة لفتح الشات معه.</p>`;
-const CL = { demoMsg: "رابط المعاينة (Demo) لتجربة موقعك قبل الدفع", finalMsg: "تم تأكيد الدفع! رابط موقعك النهائي", open: "فتح", copy: "نسخ الرابط", copied: "تم النسخ ✓", copyFail: "انسخه يدوياً" };
+const CL = { demoMsg: "رابط المعاينة (Demo) لتجربة موقعك قبل الدفع", finalMsg: "تم تأكيد الدفع! رابط موقعك النهائي", open: "فتح", copy: "نسخ الرابط", copied: "تم النسخ ✓", copyFail: "انسخه يدوياً", sysSub: "أرسل الزبون معلومات دفع CCP، بانتظار التحقق", sysOk: "✓ تم تأكيد الدفع وتفعيل التسليم", sysNo: "✕ تم رفض الدفع" };
+const cp = v => `<button type="button" class="btn gh sm" data-copy="${esc(v)}" data-t="نسخ" data-ok="تم ✓" data-f="يدوياً">نسخ</button>`;
 let cur = null, off = null, view = "orders";
 
 const sum = (L, f) => L.reduce((a, o) => a + f(o), 0);
@@ -86,7 +92,7 @@ const bars = (rows, f = x => x) => { const m = Math.max(1, ...rows.map(r => r[1]
 /* ---- قائمة الطلبات ---- */
 function list() {
   const L = DB.all().sort((a, b) => b.createdAt - a.createdAt);
-  $("#list").innerHTML = (L.map(o => { const w = waiting(o); return `<button class="li${o.id === cur ? " on" : ""}" data-id="${esc(o.id)}"><span class="r1"><b dir="ltr">${esc(o.id)}</b>${w ? `<span class="bdg">${w}</span>` : ""}</span><span>${esc(o.name)}</span>${tag(o)}</button>`; }).join("")
+  $("#list").innerHTML = (L.map(o => { const w = waiting(o); return `<button class="li${o.id === cur ? " on" : ""}" data-id="${esc(o.id)}"><span class="r1"><b dir="ltr">${esc(o.id)}</b>${w ? `<span class="bdg">${w}</span>` : ""}</span><span>${esc(o.name)}</span>${tag(o)}${o.ccp && o.ccp.status === "pending" ? `<span class="tag" data-p="pending">💳 دفع بانتظار التحقق</span>` : ""}</button>`; }).join("")
     || `<p class="muted" style="padding:1rem">لا طلبات بعد. أرسل طلباً من الصفحة الرئيسية أو جرّب البيانات التجريبية.</p>`)
     + `<div class="lt"><button class="btn gh sm" id="seed">بيانات تجريبية</button><button class="btn gh sm" id="clr">مسح الكل</button></div>`;
 }
@@ -94,11 +100,18 @@ function list() {
 /* ---- تفاصيل الطلب + الشات ---- */
 function finLine() {
   const o = cur && DB.get(cur); if (!o || !$("#fin")) return;
-  const due = Math.max(0, o.price - paid(o));
+  const due = Math.max(0, o.price - paid(o)), c = o.ccp, P = { pending: "بانتظار التحقق", confirmed: "تم التأكيد ✓", rejected: "مرفوض" };
   $("#fin").textContent = `المدفوع ${money(paid(o))} · المتبقي ${money(due)}`;
   $("#stt").innerHTML = tag(o); $("#st").value = o.status;
   $("#dst").textContent = `الديمو: ${o.demoUrl ? "محفوظ" : "—"} · الدفع: ${o.price && !due ? "مكتمل" : "بانتظار التأكيد"} · التسليم: ${o.unlocked ? "مفعّل ✓" : "غير مفعّل"}`;
-  $("#act").disabled = !!o.unlocked; $("#act").textContent = o.unlocked ? "تم تفعيل التسليم ✓" : "تأكيد دفع CCP وتفعيل التسليم";
+  $("#pst").innerHTML = c ? `<span class="tag" data-p="${c.status}">${P[c.status]}</span>` : "";
+  $("#pinfo").innerHTML = c && c.num ? [["رقم CCP للزبون", c.num, 1], ["المفتاح", c.key, 1], ["الاسم", c.name, 1], ["مرجع التحويل", c.ref || "—", !!c.ref],
+      ["المبلغ المتفق عليه", money(c.amount ?? o.price)], ["وقت الإرسال", new Date(c.t).toLocaleString("ar-u-nu-latn")]]
+      .map(([k, v, y]) => `<div class="kv"><span>${k}</span><span><b dir="auto">${esc(v)}</b>${y ? cp(v) : ""}</span></div>`).join("")
+    + (c.status === "rejected" ? `<p class="err">سبب الرفض: ${esc(c.reason)}</p>` : c.status === "pending" ? `<p class="muted">تحقق من وصول المبلغ إلى حسابك قبل التأكيد.</p>` : "")
+    : c ? `<p class="muted">تم التأكيد يدوياً دون معلومات من الزبون.</p>` : `<p class="muted">لم يرسل الزبون معلومات الدفع بعد.</p>`;
+  $("#act").disabled = !!o.unlocked; $("#act").textContent = o.unlocked ? "تم تفعيل التسليم ✓" : "تأكيد الدفع وتفعيل التسليم";
+  $("#rej").disabled = !!o.unlocked || !(c && c.status === "pending");
 }
 
 function open(id) {
@@ -107,7 +120,7 @@ function open(id) {
   const d = new Date(o.createdAt).toLocaleDateString("ar-u-nu-latn", { day: "numeric", month: "long", year: "numeric" });
   $("#detail").innerHTML = `
     <div><h2>${esc(o.name)} <span id="stt"></span></h2>
-      <p class="muted"><span dir="ltr">${esc(o.id)}</span> · <a href="tel:${esc(o.phone)}" dir="ltr" style="color:inherit">${esc(o.phone)}</a> · ${d}</p></div>
+      <p class="muted"><span dir="ltr">${esc(o.id)}</span> · <a href="tel:${esc(o.phone)}" dir="ltr" style="color:inherit">${esc(o.phone)}</a> · <a href="${AZ.wa("", AZ.waTo(o.phone))}" target="_blank" rel="noopener" style="color:inherit">واتساب</a> · ${d}</p></div>
     <div class="ctl">
       <label>الحالة<select id="st">${Object.keys(ST).map(k => `<option value="${k}"${k === o.status ? " selected" : ""}>${ST[k].ar}</option>`).join("")}</select></label>
       <label>السعر المتفق عليه (دج)<input id="pr" type="number" min="0" value="${o.price || ""}"></label>
@@ -115,11 +128,16 @@ function open(id) {
       <button class="btn pri sm" id="sv">حفظ</button>
     </div>
     <p class="muted" id="fin"></p>
+    <div class="dlv" id="payc">
+      <h3>التحقق من الدفع (CCP) <span id="pst"></span></h3>
+      <div id="pinfo"></div>
+      <div class="lka"><button class="btn pri sm" id="act"></button><button class="btn gh sm" id="rej">رفض الدفع</button></div>
+    </div>
     <div class="dlv">
       <h3>التسليم</h3>
-      <label>رابط الديمو / المعاينة (Demo URL)<input id="du" dir="ltr" placeholder="https://demo.example.com" value="${esc(o.demoUrl || "")}"></label>
-      <label>رابط الموقع النهائي (Final Site URL)<input id="fu" dir="ltr" placeholder="https://example.com" value="${esc(o.finalUrl || "")}"></label>
-      <div class="lka"><button class="btn gh sm" id="svu">حفظ الروابط</button><button class="btn gh sm" id="sd">إرسال الديمو للزبون</button><button class="btn pri sm" id="act"></button></div>
+      <label>رابط الديمو (Demo URL): يظهر للزبون كزر «معاينة» دون كشف الرابط<input id="du" dir="ltr" placeholder="https://demo.example.com" value="${esc(o.demoUrl || "")}"></label>
+      <label>رابط الموقع النهائي (Final URL): لا يظهر للزبون إلا بعد تأكيد الدفع<input id="fu" dir="ltr" placeholder="https://example.com" value="${esc(o.finalUrl || "")}"></label>
+      <div class="lka"><button class="btn gh sm" id="svu">حفظ الروابط</button><button class="btn gh sm" id="sd">إرسال الديمو للزبون</button></div>
       <p class="muted" id="dst"></p><p id="dmsg" class="err"></p>
     </div>
     <div><h3>تفاصيل الطلب</h3><div class="chips" style="margin-top:.4rem">${o.options.map(x => `<span class="tag">${esc(x.t.ar)}</span>`).join("") || `<span class="muted">لم يختر مميزات</span>`}</div>
@@ -127,25 +145,36 @@ function open(id) {
       ${o.freeText ? `<p class="idea">${esc(o.freeText)}</p>` : ""}</div>
     <div class="card chat" id="chat"></div>`;
   finLine(); list();
+  DB.getFinal(id).then(u => { if (cur === id && !$("#fu").value) $("#fu").value = u; });
   $("#st").onchange = () => DB.update(id, x => { x.status = $("#st").value; });
   $("#sv").onclick = () => { DB.update(id, x => { x.price = +$("#pr").value || 0; const a = +$("#pay").value; if (a > 0) x.payments.push({ amount: a, t: Date.now() }); }); $("#pay").value = ""; };
   const say = (t, ok) => { $("#dmsg").className = ok ? "muted" : "err"; $("#dmsg").textContent = t; };
   const urls = () => { // حفظ الروابط بعد التحقق (http/https فقط)
     const d = AZ.url($("#du").value), f = AZ.url($("#fu").value);
     if (d === null || f === null) { say("رابط غير صالح: يجب أن يبدأ بـ http:// أو https://"); return null; }
-    $("#du").value = d; $("#fu").value = f; DB.update(id, x => { x.demoUrl = d; x.finalUrl = f; }); return { d, f };
+    $("#du").value = d; $("#fu").value = f; DB.update(id, x => { x.demoUrl = d; }); if (f) DB.setFinal(id, f); return { d, f }; // الرابط النهائي في مجموعة finals المحمية
   };
   $("#svu").onclick = () => urls() && say("تم حفظ الروابط ✓", 1);
   $("#sd").onclick = () => {
     const u = urls(); if (!u) return; if (!u.d) return say("أدخل رابط الديمو أولاً");
     DB.update(id, x => { x.messages.push({ from: "admin", kind: "demo", url: u.d, t: Date.now() }); }); say("أُرسل رابط الديمو للزبون في الشات ✓", 1);
   };
+  $("#rej").onclick = () => {
+    const why = prompt("سبب رفض الدفع (يظهر للزبون):", "لم يصل التحويل بعد"); if (why === null) return;
+    DB.update(id, x => { if (!x.ccp) return; x.ccp.status = "rejected"; x.ccp.reason = why.trim() || "—"; x.ccp.verifiedAt = Date.now(); x.messages.push({ from: "admin", kind: "payno", text: x.ccp.reason, t: Date.now() }); });
+    say("تم رفض الدفع وأُبلغ الزبون ✓", 1);
+  };
   $("#act").onclick = () => { // تأكيد CCP: يسجّل المتبقي كدفعة، ويفتح الرابط النهائي للزبون
     const u = urls(); if (!u) return; if (!u.f) return say("أدخل رابط الموقع النهائي أولاً");
     const o2 = DB.get(id), price = +$("#pr").value || o2.price; if (!price) return say("حدّد السعر المتفق عليه أولاً");
     const due = Math.max(0, price - paid(o2));
     if (!confirm(`تأكيد استلام الدفع عبر CCP${due ? " (" + money(due) + ")" : ""} وتفعيل التسليم للزبون؟`)) return;
-    DB.update(id, x => { x.price = price; if (due) x.payments.push({ amount: due, t: Date.now(), method: "CCP" }); x.unlocked = true; x.unlockedAt = Date.now(); x.status = "delivered"; x.messages.push({ from: "admin", kind: "final", url: u.f, t: Date.now() }); });
+    DB.update(id, x => {
+      x.price = price; if (due) x.payments.push({ amount: due, t: Date.now(), method: "CCP", ref: (x.ccp && x.ccp.ref) || "" });
+      x.ccp = { ...(x.ccp || { manual: true, t: Date.now() }), status: "confirmed", verifiedAt: Date.now() };
+      x.unlocked = true; x.unlockedAt = Date.now(); x.status = "delivered";
+      x.messages.push({ from: "admin", kind: "payok", t: Date.now() }, { from: "admin", kind: "final", url: u.f, t: Date.now() });
+    });
     say("تم تفعيل التسليم وأُرسل الرابط النهائي للزبون ✓", 1);
   };
   off = AZ.Chat.mount($("#chat"), id, "admin", { ...CL, ph: "اكتب ردك...", send: "إرسال", empty: "لا رسائل بعد. ابدأ الرد على الزبون.", lang: "ar", title: o.name, sub: o.id });
@@ -177,14 +206,14 @@ function stats() {
 /* ---- بيانات تجريبية ---- */
 function seed() {
   const N = ["صفحة هبوط", "موقع متعدد الصفحات", "معرض أعمال", "متجر إلكتروني", "نظام حجز", "لوحة تحكم", "تحسين SEO", "ثلاث لغات"],
-    names = ["أمين", "سارة", "يوسف", "ليلى", "كريم", "نور", "ياسين", "هدى", "سمير", "مريم", "رياض", "إيمان"], S = Object.keys(ST), now = Date.now(), D = 864e5, L = DB.all();
+    names = ["أمين", "سارة", "يوسف", "ليلى", "كريم", "نور", "ياسين", "هدى", "سمير", "مريم", "رياض", "إيمان"], S = Object.keys(ST), now = Date.now(), D = 864e5, L = [];
   names.forEach(n => {
     const t = now - Math.random() * 170 * D, st = S[Math.random() * S.length | 0], pr = (3 + Math.random() * 27 | 0) * 5000, quoted = !["new", "reviewing"].includes(st);
     const opts = [...N.keys()].sort(() => Math.random() - .5).slice(0, 1 + Math.random() * 3 | 0).map(k => ({ id: "d" + k, t: { ar: N[k], fr: N[k], en: N[k] } }));
     L.push({ id: DB.newId(), name: n, phone: "0550" + (100000 + Math.random() * 899999 | 0), lang: "ar", type: "build", options: opts, budget: null, budgetLater: true, freeText: "", status: st, price: quoted ? pr : 0, createdAt: t, messages: [],
       payments: ["in_progress", "delivered", "closed"].includes(st) ? [{ amount: Math.round(pr * (st === "in_progress" ? .5 : 1)), t: Math.min(now, t + 5 * D) }] : [] });
   });
-  DB.save(L);
+  DB.seed(L);
 }
 
 /* ---- التنقل والأحداث ---- */
@@ -200,19 +229,40 @@ $("#list").onclick = e => {
   const b = e.target.closest(".li");
   if (b) open(b.dataset.id);
   else if (e.target.id === "seed") seed();
-  else if (e.target.id === "clr" && confirm("مسح كل الطلبات؟")) { cur = null; off && off(); $("#detail").innerHTML = EMPTY; DB.save([]); }
+  else if (e.target.id === "clr" && confirm("مسح كل الطلبات؟")) { cur = null; off && off(); $("#detail").innerHTML = EMPTY; DB.clear(); }
 };
-$("#lf").onsubmit = e => { e.preventDefault(); if ($("#pw").value === PASS) { sessionStorage.setItem("azador.admin", "1"); enter(); } else $("#le").textContent = "كلمة السر غير صحيحة"; };
-$("#out").onclick = () => { sessionStorage.removeItem("azador.admin"); location.reload(); };
+$("#lf").onsubmit = async e => { // دخول حقيقي عبر Firebase Auth
+  e.preventDefault(); $("#le").textContent = "";
+  if (!AZ.auth) { $("#le").textContent = "تعذّر تحميل Firebase Auth: افتح الصفحة عبر http (Live Server أو استضافة)."; return; }
+  try { await AZ.auth.signInWithEmailAndPassword($("#em").value.trim(), $("#pw").value); }
+  catch (err) { $("#le").textContent = /not-supported/.test(err.code) ? "افتح الصفحة عبر http/https (Live Server أو استضافة) وليس file://" : "البريد الإلكتروني أو كلمة السر غير صحيحة"; }
+};
+$("#out").onclick = async () => { AZ.auth && await AZ.auth.signOut(); location.reload(); };
 $("#themeBtn").onclick = AZ.Theme.toggle;
 $("#pc").value = AZ.ls("primary") || "#7c5cff";
 $("#pc").oninput = e => AZ.Theme.primary(e.target.value);
-$("#ccp").value = AZ.ls("ccp") || "";
-$("#ccp").oninput = e => AZ.ls("ccp", e.target.value);
+let ccpT;
+const fillCcp = () => { const c0 = AZ.ccp(); $("#cn").value = c0.num || ""; $("#ck").value = c0.key || ""; $("#cm").value = c0.name || ""; };
+$("#v-finance").oninput = e => {
+  if (!["cn", "ck", "cm"].includes(e.target.id)) return;
+  const v = { num: $("#cn").value, key: $("#ck").value, name: $("#cm").value };
+  clearTimeout(ccpT); ccpT = setTimeout(() => DB.setCcp({ num: v.num.replace(/\s/g, ""), key: v.key.trim(), name: v.name.trim() }), 600);
+  const bad = Object.keys(AZ.ccpCheck({ ...v, ok: true }).err), L = { num: "رقم الحساب (6 إلى 10 أرقام)", key: "المفتاح (رقمان)", name: "الاسم (اسم ولقب)" };
+  $("#cmsg").textContent = bad.length ? "⚠ تحقق من: " + bad.map(k => L[k]).join("، ") : "✓ تم الحفظ";
+};
 
-function enter() { $("#login").hidden = true; $("#app").hidden = false; $("#detail").innerHTML = EMPTY; list(); show("orders"); }
+let started = false;
+async function enter() {
+  $("#login").hidden = true; $("#app").hidden = false; $("#detail").innerHTML = EMPTY;
+  if (!started) { // مستمع onSnapshot لكل الطلبات: تظهر الجديدة فوراً من أي جهاز
+    started = true;
+    try { await DB.watchAll(); }
+    catch (e) { started = false; console.error(e); $("#list").innerHTML = `<p class="err" style="padding:1rem">تعذّر تحميل الطلبات. تحقق من قواعد Firestore وUID الأدمن (${esc(e.code || e.message)})</p>`; return; }
+  }
+  fillCcp(); list(); show("orders");
+}
 DB.on(refresh);
-if (sessionStorage.getItem("azador.admin") === "1") enter();
+AZ.auth && AZ.auth.onAuthStateChanged(u => u && enter());
 </script>
 </body>
 </html>

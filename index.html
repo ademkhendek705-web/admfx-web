@@ -198,6 +198,13 @@ h2{font-size:clamp(2rem,3.6vw,2.9rem);line-height:1.2}
 :root:lang(ar) h2{font-size:clamp(1.7rem,3vw,2.4rem);line-height:var(--lh-h)}
 .head h2::after{content:"";display:block;width:56px;height:1px;background:var(--accent);margin-top:.6rem}
 .tx b,.steps h3,.work h3,.sum h3{font-family:var(--font-h);font-size:1.22rem;font-weight:700;line-height:1.4}
+
+/* ===== واتساب ===== */
+.wa{position:fixed;inset-block-end:1.1rem;inset-inline-end:1.1rem;z-index:40;display:flex;align-items:center;gap:.55rem;padding:.7rem 1.15rem;border-radius:99px;background:#1e7a47;color:#f7f2e6;font-weight:700;text-decoration:none;line-height:1.4;box-shadow:0 12px 28px -12px rgba(0,0,0,.55);transition:transform .2s var(--ease),filter .2s}
+.wa:hover{transform:translateY(-2px);filter:brightness(1.1)}
+.wa::before{content:"";width:9px;height:9px;border-radius:50%;background:#7dffb0;box-shadow:0 0 0 4px rgba(125,255,176,.25)}
+.wa-btn{background:#1e7a47;color:#f7f2e6;border-color:transparent}.wa-btn:hover{filter:brightness(1.1)}
+.wab{margin-top:1rem;display:flex}
 </style>
 </head>
 <body>
@@ -278,9 +285,12 @@ h2{font-size:clamp(2rem,3.6vw,2.9rem);line-height:1.2}
   </section>
 </main>
 
+<a class="wa" id="waFab" href="#" target="_blank" rel="noopener" hidden><span data-i="wa"></span></a>
 <footer>© 2026 AZADOR-web</footer>
 
 <script>setTimeout(()=>document.querySelectorAll("[data-a]").forEach(e=>e.classList.add("in")),1500)</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="azador.js"></script>
 <script>
 /* ===== DATA: النصوص والخيارات (لاحقاً تأتي من Firestore) ===== */
@@ -297,7 +307,7 @@ w1t:"مطاعم ومقاهي",w1d:"قائمة طعام وحجز طاولات و�
 bt:"ابنِ موقعك",bs:"اختر الأفكار والمميزات التي تلائم مشروعك، أو اكتب فكرتك بحرية، وسنحدد التفاصيل معاً.",m1:"اختر المميزات",m2:"حسب ميزانيتك",
 cats:["الأساس","المميزات","إضافات"],bud:"ميزانيتك",budh:"اشرح لنا في الأسفل ما تريده، وسنقترح عليك ما يناسب ميزانيتك.",
 idea:"اشرح فكرتك بطريقتك",ph:"مثال: أريد موقعاً لمطعمي مع قائمة طعام وحجز طاولات...",sum:"ملخص طلبك",none:"لم تختر شيئاً بعد",later:"نتفق بعد التواصل",laterd:"لا أريد تحديد رقم الآن، نناقش الميزانية معاً بعد أن تفهم طلبي.",bl:"ميزانيتك",cnt:"المميزات المختارة",note:"لا يوجد سعر نهائي هنا: نحدّده معك بعد فهم طلبك.",
-name:"اسمك",phone:"رقم هاتفك",send:"أرسل الطلب",err:"أدخل اسمك ورقم هاتف صحيحاً.",ok:"✓ تم إرسال طلبك! نفتح لك الشات الآن..."},
+name:"اسمك",phone:"رقم هاتفك",send:"أرسل الطلب",err:"أدخل اسمك ورقم هاتف صحيحاً.",ok:"✓ تم إرسال طلبك! نفتح لك واتساب والشات الآن...",wa:"واتساب",waHi:"السلام عليكم، أريد الاستفسار عن إنشاء موقع.",waH:"طلب جديد من AZADOR-web",waN:"الاسم",waP:"الهاتف",waI:"رقم الطلب",waO:"الخيارات",waB:"الميزانية",waD:"الفكرة",wait:"جارٍ إرسال طلبك...",errNet:"تعذّر حفظ الطلب. تحقق من الاتصال وأعد المحاولة.",goTrack:"فتح صفحة المتابعة"},
 fr:{th:"Thème",nav1:"Méthode",nav2:"Domaines",nav3:"Crée ton site",live:"En cours",
 ht:"Des sites web qui impressionnent vos clients",hs:"Des sites modernes et rapides, conçus selon ton idée et ton budget, avec un suivi en direct.",h1:"Crée ton site",h2:"Commence par ton budget",
 pt:"Notre méthode",ps:"De la première idée à la livraison, tu sais toujours où en est ton projet.",
@@ -307,7 +317,7 @@ w1t:"Restaurants et cafés",w1d:"Menu, réservation de tables et carte d’accè
 bt:"Crée ton site",bs:"Choisis les idées et fonctionnalités qui te conviennent, ou décris ton projet librement ; on précisera les détails ensemble.",m1:"Choisir les options",m2:"Selon ton budget",
 cats:["Base","Fonctionnalités","Extras"],bud:"Ton budget",budh:"Explique ci-dessous ce que tu veux, on te proposera ce qui convient à ton budget.",
 idea:"Explique ton idée à ta façon",ph:"Ex : un site pour mon restaurant avec menu et réservation...",sum:"Résumé de ta demande",none:"Rien de sélectionné",later:"On en parle après",laterd:"Je ne fixe pas de chiffre maintenant : on discute du budget une fois ma demande comprise.",bl:"Ton budget",cnt:"Options choisies",note:"Pas de prix final ici : on le fixe avec toi après avoir compris ta demande.",
-name:"Ton nom",phone:"Ton numéro de téléphone",send:"Envoyer la demande",err:"Entre ton nom et un numéro valide.",ok:"✓ Demande envoyée ! On ouvre ton chat..."},
+name:"Ton nom",phone:"Ton numéro de téléphone",send:"Envoyer la demande",err:"Entre ton nom et un numéro valide.",ok:"✓ Demande envoyée ! On ouvre WhatsApp et ton chat...",wa:"WhatsApp",waHi:"Bonjour, je voudrais des infos pour créer un site.",waH:"Nouvelle demande AZADOR-web",waN:"Nom",waP:"Téléphone",waI:"N° de commande",waO:"Options",waB:"Budget",waD:"Idée",wait:"Envoi en cours...",errNet:"Impossible d’enregistrer la demande. Vérifie ta connexion et réessaie.",goTrack:"Ouvrir le suivi"},
 en:{th:"Theme",nav1:"Process",nav2:"Work",nav3:"Build your site",live:"In progress",
 ht:"We build websites that wow your clients",hs:"Modern, fast sites designed around your idea and your budget, with live order tracking.",h1:"Build your site",h2:"Start with your budget",
 pt:"How we work",ps:"From the first idea to launch day, you always know where your project stands.",
@@ -317,7 +327,7 @@ w1t:"Restaurants & cafés",w1d:"Menu, table booking and a map to find you.",w2t:
 bt:"Build your site",bs:"Pick the ideas and features that fit your project, or just describe it in your own words; we’ll sort out the details together.",m1:"Pick features",m2:"By budget",
 cats:["Foundation","Features","Extras"],bud:"Your budget",budh:"Describe what you want below and we’ll suggest what fits your budget.",
 idea:"Describe your idea your way",ph:"e.g. A site for my restaurant with a menu and table booking...",sum:"Your order summary",none:"Nothing selected yet",later:"Let’s agree after we talk",laterd:"I’d rather not set a number yet. Let’s discuss the budget after you’ve reviewed my request.",bl:"Your budget",cnt:"Selected features",note:"No final price here: we set it with you after understanding your request.",
-name:"Your name",phone:"Your phone number",send:"Send request",err:"Enter your name and a valid phone number.",ok:"✓ Request sent! Opening your chat..."}
+name:"Your name",phone:"Your phone number",send:"Send request",err:"Enter your name and a valid phone number.",ok:"✓ Request sent! Opening WhatsApp and your chat...",wa:"WhatsApp",waHi:"Hello, I’d like to ask about building a website.",waH:"New AZADOR-web request",waN:"Name",waP:"Phone",waI:"Order ID",waO:"Options",waB:"Budget",waD:"Idea",wait:"Sending your request...",errNet:"Couldn’t save your request. Check your connection and try again.",goTrack:"Open tracking"}
 };
 
 const O = [ // c = رقم الفئة في cats (أفكار استرشادية بلا أسعار)
@@ -382,6 +392,7 @@ function setLang(l) {
   $$("[data-ph]").forEach(e => e.placeholder = T[l][e.dataset.ph]);
   $$(".lang button").forEach(b => b.classList.toggle("on", b.dataset.l === l));
   renderOptions(); update();
+  if (HAS) { const w = $("#waFab"); w.href = AZ.wa(T[l].waHi); w.hidden = false; }
 }
 
 let sw;
@@ -415,18 +426,26 @@ $("#themeBtn").onclick = () => {
   setTimeout(() => r.classList.remove("theming"), 600);
 };
 
-$("#send").onclick = () => {
-  const name = $("#nm").value.trim(), phone = $("#em").value.trim(), ok = $("#ok");
+$("#send").onclick = async () => {
+  const name = $("#nm").value.trim(), phone = $("#em").value.trim(), ok = $("#ok"), Tt = T[lang];
   ok.hidden = false;
-  if (!name || phone.replace(/\D/g, "").length < 8) { ok.className = "err"; ok.textContent = T[lang].err; return; }
+  if (!name || phone.replace(/\D/g, "").length < 8) { ok.className = "err"; ok.textContent = Tt.err; return; }
   if (!HAS) { ok.className = "err"; ok.textContent = "azador.js غير موجود: ضعه في نفس مجلد index.html"; return; }
-  const o = AZ.DB.create({ name, phone, lang, type: mode,
-    options: O.filter(x => sel.has(x.id)).map(x => ({ id: x.id, t: x.t })),
-    budget: mode === "budget" && !later ? +$("#bud").value : null, budgetLater: mode === "budget" && later,
-    freeText: $("#idea").value.trim() });
-  ok.className = ""; ok.textContent = T[lang].ok;
-  $("#send").disabled = true;
-  setTimeout(() => location.href = "client.html?order=" + o.id, 800);
+  const w = window.open("", "_blank"); // يُفتح داخل نقرة المستخدم كي لا يحجبه المتصفح
+  ok.className = ""; ok.textContent = Tt.wait; $("#send").disabled = true;
+  let o;
+  try { // حفظ الطلب في Firestore برقم متابعة فريد
+    o = await AZ.DB.create({ name, phone, lang, type: mode,
+      options: O.filter(x => sel.has(x.id)).map(x => ({ id: x.id, t: x.t })),
+      budget: mode === "budget" && !later ? +$("#bud").value : null, budgetLater: mode === "budget" && later,
+      freeText: $("#idea").value.trim() });
+  } catch (e) { console.error(e); w && w.close(); ok.className = "err"; ok.textContent = Tt.errNet; $("#send").disabled = false; return; }
+  const opts = o.options.map(x => x.t[lang]).join("، ") || "—";
+  const msg = [Tt.waH, `${Tt.waN}: ${name}`, `${Tt.waP}: ${phone}`, `${Tt.waI}: ${o.id}`, `${Tt.waO}: ${opts}`,
+    mode === "budget" && `${Tt.waB}: ${later ? Tt.later : money(+$("#bud").value)}`, o.freeText && `${Tt.waD}: ${o.freeText}`].filter(Boolean).join("\n");
+  const wl = AZ.wa(msg), track = "client.html?order=" + o.id;
+  if (w) { w.opener = null; w.location.href = wl; ok.textContent = Tt.ok; setTimeout(() => location.href = track, 800); }
+  else ok.innerHTML = `${AZ.esc(Tt.ok)} <a class="btn wa-btn sm" href="${wl}" target="_blank" rel="noopener">${AZ.esc(Tt.wa)}</a> <a class="btn gh sm" href="${track}">${AZ.esc(Tt.goTrack)}</a>`;
 };
 
 /* إضاءة تتبع المؤشر على البطاقات */

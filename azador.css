@@ -99,3 +99,45 @@ h2{font-size:1.65rem}
 .lkc b{font-family:var(--font-h);font-size:1.1rem;font-weight:700;line-height:1.5}
 .msg.lk{max-width:86%}
 .btn.done{background:var(--st-del);border-color:var(--st-del);color:var(--bg)}
+
+/* ===== نافذة الدفع CCP + حالات التحقق + إشعارات الشات ===== */
+.modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:1rem;background:rgba(10,14,11,.6);backdrop-filter:blur(3px);animation:fadeIn .2s}
+.mbox{position:relative;width:min(580px,100%);max-height:92vh;overflow:auto;background:var(--s1);border:1px solid var(--bd2);border-radius:10px;padding:1.5rem;display:grid;gap:1rem;box-shadow:0 30px 80px -30px rgba(0,0,0,.7);animation:pop .3s var(--ease)}
+.mclose{position:absolute;inset-block-start:.6rem;inset-inline-end:.8rem;background:none;border:0;color:var(--muted);font-size:1.7rem;line-height:1;cursor:pointer;padding:.2rem .5rem}
+.mclose:hover{color:var(--text)}
+.acct{padding:1rem;border:1px solid var(--bd2);border-radius:var(--r);background:var(--s2);display:grid;gap:.2rem}
+.acct h3{margin-bottom:.3rem}
+.kv>span:last-child:not(:first-child){display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.fld{display:grid;gap:.2rem}.fld>span{font-size:.92rem;color:var(--muted)}
+.row2{display:grid;grid-template-columns:2fr 1fr;gap:.7rem}
+.e{color:var(--danger);font-size:.85rem}
+[aria-invalid=true]{border-color:var(--danger)!important}
+.chk{display:flex;gap:.6rem;align-items:flex-start;font-size:.95rem}.chk input{width:auto;margin-top:.5rem}
+.nbox{padding:.75rem .95rem;border-radius:4px;border:1px solid var(--bd2);border-inline-start:3px solid var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--s2));font-size:.92rem}
+.errsum{padding:.6rem .9rem;border-radius:4px;border:1px solid var(--danger);color:var(--danger);font-size:.92rem}
+.mact{display:flex;gap:.6rem;justify-content:flex-end;flex-wrap:wrap}
+.btn.wide{width:100%}
+.vs{padding:.55rem .8rem;border-radius:4px;font-size:.92rem;border:1px solid var(--bd2)}
+.vs.pend{border-color:var(--st-rev);color:var(--st-rev)}.vs.rej{border-color:var(--danger);color:var(--danger)}.vs.ok{border-color:var(--st-del);color:var(--st-del)}
+.msg.sys{align-self:center;align-items:center;max-width:92%}
+.sysn{padding:.45rem .95rem;border-radius:99px;font-size:.88rem;text-align:center;background:var(--s2);border:1px solid var(--bd2);color:var(--muted)}
+.sysn.paysub{color:var(--st-rev);border-color:var(--st-rev)}.sysn.payok{color:var(--st-del);border-color:var(--st-del)}.sysn.payno{color:var(--danger);border-color:var(--danger)}
+.tag[data-p=pending]{--c:var(--st-rev)}.tag[data-p=confirmed]{--c:var(--st-del)}.tag[data-p=rejected]{--c:var(--danger)}
+@keyframes fadeIn{from{opacity:0}}
+
+/* ===== واتساب ===== */
+.wa{position:fixed;inset-block-end:1.1rem;inset-inline-end:1.1rem;z-index:40;display:flex;align-items:center;gap:.55rem;padding:.7rem 1.15rem;border-radius:99px;background:#1e7a47;color:#f7f2e6;font-weight:700;text-decoration:none;line-height:1.4;box-shadow:0 12px 28px -12px rgba(0,0,0,.55);transition:transform .2s var(--ease),filter .2s}
+.wa:hover{transform:translateY(-2px);filter:brightness(1.1)}
+.wa::before{content:"";width:9px;height:9px;border-radius:50%;background:#7dffb0;box-shadow:0 0 0 4px rgba(125,255,176,.25)}
+.wa-btn{background:#1e7a47;color:#f7f2e6;border-color:transparent}.wa-btn:hover{filter:brightness(1.1)}
+.wab{margin-top:1rem;display:flex}
+
+/* ===== نافذة معاينة الديمو (iframe) ===== */
+.dmb{width:min(96vw,1000px);height:min(88vh,800px);max-height:none;padding:0;gap:0;grid-template-rows:auto 1fr;overflow:hidden}
+.dmh{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.65rem 1rem;border-block-end:1px solid var(--bd);background:var(--s1)}
+.dmh b{font-family:var(--font-h);font-size:1.2rem;line-height:1.4}
+.dmx{width:2.5rem;height:2.5rem;border-radius:50%;border:1px solid var(--bd2);background:var(--s2);color:var(--text);font-size:1.5rem;line-height:1;cursor:pointer;transition:border-color .2s,color .2s}
+.dmx:hover{border-color:var(--danger);color:var(--danger)}
+.dmf{width:100%;height:100%;border:0;background:#fff}
+
+.toast{position:fixed;inset-block-end:1rem;inset-inline:1rem;margin-inline:auto;width:fit-content;max-width:92vw;z-index:60;padding:.7rem 1.1rem;border-radius:6px;background:var(--danger);color:#fff;font-weight:600;box-shadow:0 12px 30px -12px rgba(0,0,0,.6);animation:pop .25s var(--ease)}

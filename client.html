@@ -11,6 +11,7 @@
 .side h3{margin-top:1.2rem}.side h3:first-child{margin-top:0}
 .idea{margin-top:.8rem;padding:.8rem 1rem;background:var(--s2);border-radius:12px;font-size:.95rem;white-space:pre-wrap;overflow-wrap:anywhere}
 .nf{grid-column:1/-1;text-align:center;padding:3rem 1rem;display:grid;gap:1rem;justify-items:center}
+.nf form{display:flex;gap:.5rem;width:min(420px,100%)}
 </style>
 </head>
 <body>
@@ -27,36 +28,111 @@
   <aside class="card side" id="side"></aside>
 </main>
 
+<div class="modal" id="pm" hidden role="dialog" aria-modal="true" aria-labelledby="pmT"><div class="mbox" id="pmb"></div></div>
+<div class="modal" id="dm" hidden role="dialog" aria-modal="true" aria-labelledby="dmT"><div class="mbox dmb" id="dmb"></div></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="azador.js"></script>
 <script>if(typeof AZ==="undefined")document.body.innerHTML='<p style="padding:2rem;font:700 18px/1.8 sans-serif;color:#ff6b7a;direction:rtl">ملف azador.js غير موجود. ضع index.html وclient.html وadmin.html وazador.js وazador.css كلها في نفس المجلد ثم حدّث الصفحة.</p>'</script>
 <script>
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const X = {
-ar:{st:"حالة طلبك",req:"ملخص طلبك",ph:"اكتب رسالتك...",send:"إرسال",empty:"ابدأ المحادثة: اشرح لي ما تريده وسأرد عليك هنا.",sub:"نرد عليك هنا في أقرب وقت",pr:"السعر المتفق عليه",pd:"المدفوع",bud:"ميزانيتك",later:"الميزانية: نتفق بعد التواصل",nf:"لم نجد هذا الطلب",back:"العودة للرئيسية",th:"الثيم",demo:"معاينة موقعك (Demo)",demoNote:"هذه نسخة للمعاينة والاختبار قبل إتمام الدفع.",openDemo:"فتح الديمو",payT:"الدفع عبر CCP",payNote:"أعجبك الديمو؟ ادفع عبر CCP ثم أرسل تأكيد الدفع (صورة الوصل أو رقم العملية) في الشات. بعد التأكيد يظهر هنا رابط موقعك النهائي.",due:"المبلغ المطلوب",finT:"رابط موقعك النهائي (Final Site URL)",open:"فتح",copy:"نسخ الرابط",copied:"تم النسخ ✓",copyFail:"انسخه يدوياً",demoMsg:"رابط المعاينة (Demo) لتجربة موقعك قبل الدفع",finalMsg:"تم تأكيد الدفع! رابط موقعك النهائي"},
-fr:{st:"Statut de ta commande",req:"Résumé de ta demande",ph:"Écris ton message...",send:"Envoyer",empty:"Lance la discussion : explique-moi ce que tu veux et je te réponds ici.",sub:"On te répond ici au plus vite",pr:"Prix convenu",pd:"Payé",bud:"Ton budget",later:"Budget : on en parle ensemble",nf:"Commande introuvable",back:"Retour à l’accueil",th:"Thème",demo:"Aperçu de ton site (démo)",demoNote:"Version d’aperçu pour tester avant le paiement.",openDemo:"Ouvrir la démo",payT:"Paiement par CCP",payNote:"La démo te plaît ? Paie par CCP puis envoie la preuve (photo du reçu ou numéro d’opération) dans le chat. Après confirmation, le lien final apparaît ici.",due:"Montant à payer",finT:"Lien final de ton site",open:"Ouvrir",copy:"Copier le lien",copied:"Copié ✓",copyFail:"Copie-le à la main",demoMsg:"Lien de la démo pour tester ton site avant le paiement",finalMsg:"Paiement confirmé ! Voici le lien final de ton site"},
-en:{st:"Order status",req:"Your request",ph:"Type your message...",send:"Send",empty:"Start the conversation: tell me what you need and I’ll reply here.",sub:"We reply here as soon as we can",pr:"Agreed price",pd:"Paid",bud:"Your budget",later:"Budget: let’s agree after we talk",nf:"Order not found",back:"Back to home",th:"Theme",demo:"Preview your site (demo)",demoNote:"A preview version to test before payment.",openDemo:"Open demo",payT:"Pay via CCP",payNote:"Happy with the demo? Pay via CCP, then send the proof (receipt photo or transaction number) in the chat. Once confirmed, your final link appears here.",due:"Amount due",finT:"Your final site link",open:"Open",copy:"Copy link",copied:"Copied ✓",copyFail:"Copy it manually",demoMsg:"Demo link to test your site before payment",finalMsg:"Payment confirmed! Here is your final site link"}
+ar:{st:"حالة طلبك",req:"ملخص طلبك",ph:"اكتب رسالتك...",send:"إرسال",empty:"ابدأ المحادثة: اشرح لي ما تريده وسأرد عليك هنا.",sub:"نرد عليك هنا في أقرب وقت",pr:"السعر المتفق عليه",pd:"المدفوع",bud:"ميزانيتك",later:"الميزانية: نتفق بعد التواصل",nf:"هذا الطلب غير موجود",back:"العودة للرئيسية",th:"الثيم",demo:"معاينة موقعك (Demo)",demoNote:"هذه نسخة للمعاينة والاختبار قبل إتمام الدفع.",openDemo:"فتح الديمو",payT:"الدفع عبر CCP",payNote:"أعجبك الديمو؟ ادفع عبر CCP ثم أرسل تأكيد الدفع (صورة الوصل أو رقم العملية) في الشات. بعد التأكيد يظهر هنا رابط موقعك النهائي.",due:"المبلغ المطلوب",finT:"رابط موقعك النهائي (Final Site URL)",open:"فتح",copy:"نسخ الرابط",copied:"تم النسخ ✓",copyFail:"انسخه يدوياً",demoMsg:"رابط المعاينة (Demo) لتجربة موقعك قبل الدفع",finalMsg:"تم تأكيد الدفع! رابط موقعك النهائي",buy:"شراء",buyNote:"أعجبك الديمو؟ اضغط «شراء»، حوّل المبلغ إلى حساب CCP ثم أدخل معلومات تحويلك للتأكيد.",toAcct:"1) حوّل المبلغ إلى هذا الحساب",yourInfo:"2) أدخل معلومات تحويلك لتأكيد الدفع",aNum:"رقم حساب CCP",aKey:"المفتاح",aName:"الاسم (اسم ولقب)",amount:"المبلغ المطلوب (DZD)",noAcct:"لم تُضَف بيانات الحساب بعد، اطلبها في الشات.",noPrice:"لم يُحدَّد السعر بعد، تواصل معي في الشات أولاً.",fRef:"مرجع التحويل / رقم العملية (اختياري)",fOk:"أؤكد أنني حوّلت المبلغ المذكور إلى الحساب أعلاه.",pmNote:"النظام يسجّل طلبك وإشعار الدفع، ثم يتحقق الأدمن من الحساب ووصول المبلغ قبل تسليم الرابط النهائي.",pSend:"إرسال تأكيد الدفع",cancel:"إلغاء",errSum:"صحّح الحقول المحددة أدناه ثم أعد الإرسال.",e:{req:"هذا الحقل مطلوب.",num:"رقم غير صالح: من 6 إلى 10 أرقام فقط.",key:"المفتاح رقمان فقط (مثال: 45).",name:"اكتب الاسم واللقب بحروف فقط.",ref:"مرجع غير صالح: من 4 إلى 30 حرفاً أو رقماً.",ok:"يجب تأكيد أنك حوّلت المبلغ."},vPend:"⏳ بانتظار تحقق الأدمن من وصول المبلغ.",vRej:"✕ لم يُقبل الدفع",retryPay:"إعادة المحاولة",vOk:"✓ تم التحقق من الدفع",sysSub:"أُرسلت معلومات الدفع. سيتحقق الأدمن من الحساب ووصول المبلغ قبل تسليم الرابط النهائي.",sysOk:"✓ تم التحقق من الدفع وتفعيل التسليم.",sysNo:"✕ تعذّر التحقق من الدفع",nfd:"تأكد من رقم الطلب وأعد المحاولة، أو ارجع للرئيسية.",tried:"الرقم المُدخل",idPh:"رقم الطلب مثل AZD-7K3M9QXP",retry:"إعادة المحاولة",badId:"صيغة الرقم غير صحيحة (مثال: AZD-7K3M9QXP).",demoBtn:"معاينة الموقع",dmT:"معاينة موقعك",newTab:"فتح في تبويب جديد",waBtn:"تواصل / تأكيد الدفع عبر واتساب",waRip:"اطلب الـ RIP عبر واتساب",waPay:"السلام عليكم، رقم طلبي {id}. أريد تأكيد الدفع وطلب الـ RIP.",waAsk:"السلام عليكم، رقم طلبي {id}. لدي استفسار.",errNet:"تعذّر الاتصال بالخادم. تحقق من الإنترنت وأعد المحاولة."},
+fr:{st:"Statut de ta commande",req:"Résumé de ta demande",ph:"Écris ton message...",send:"Envoyer",empty:"Lance la discussion : explique-moi ce que tu veux et je te réponds ici.",sub:"On te répond ici au plus vite",pr:"Prix convenu",pd:"Payé",bud:"Ton budget",later:"Budget : on en parle ensemble",nf:"Cette commande n’existe pas",back:"Retour à l’accueil",th:"Thème",demo:"Aperçu de ton site (démo)",demoNote:"Version d’aperçu pour tester avant le paiement.",openDemo:"Ouvrir la démo",payT:"Paiement par CCP",payNote:"La démo te plaît ? Paie par CCP puis envoie la preuve (photo du reçu ou numéro d’opération) dans le chat. Après confirmation, le lien final apparaît ici.",due:"Montant à payer",finT:"Lien final de ton site",open:"Ouvrir",copy:"Copier le lien",copied:"Copié ✓",copyFail:"Copie-le à la main",demoMsg:"Lien de la démo pour tester ton site avant le paiement",finalMsg:"Paiement confirmé ! Voici le lien final de ton site",buy:"Acheter",buyNote:"La démo te plaît ? Clique sur « Acheter », vire le montant sur le compte CCP puis saisis les infos de ton virement.",toAcct:"1) Vire le montant sur ce compte",yourInfo:"2) Saisis les infos de ton virement",aNum:"Numéro de compte CCP",aKey:"Clé",aName:"Nom (nom et prénom)",amount:"Montant à payer (DZD)",noAcct:"Les coordonnées du compte ne sont pas encore ajoutées, demande-les dans le chat.",noPrice:"Le prix n’est pas encore fixé, écris-moi d’abord dans le chat.",fRef:"Référence du virement / n° d’opération (facultatif)",fOk:"Je confirme avoir viré le montant indiqué sur le compte ci-dessus.",pmNote:"Le système enregistre ta demande et ta notification de paiement, puis l’admin vérifie le compte et la réception du montant avant de livrer le lien final.",pSend:"Envoyer la confirmation",cancel:"Annuler",errSum:"Corrige les champs indiqués ci-dessous puis renvoie.",e:{req:"Ce champ est obligatoire.",num:"Numéro invalide : 6 à 10 chiffres uniquement.",key:"La clé a 2 chiffres (ex. : 45).",name:"Saisis nom et prénom, lettres uniquement.",ref:"Référence invalide : 4 à 30 caractères alphanumériques.",ok:"Tu dois confirmer le virement."},vPend:"⏳ En attente de la vérification du montant par l’admin.",vRej:"✕ Paiement refusé",retryPay:"Réessayer",vOk:"✓ Paiement vérifié",sysSub:"Infos de paiement envoyées. L’admin vérifiera le compte et la réception du montant avant de livrer le lien final.",sysOk:"✓ Paiement vérifié, livraison activée.",sysNo:"✕ Paiement non vérifié",nfd:"Vérifie le numéro de commande et réessaie, ou retourne à l’accueil.",tried:"Numéro saisi",idPh:"Numéro de commande ex. AZD-7K3M9QXP",retry:"Réessayer",badId:"Format invalide (ex. : AZD-7K3M9QXP).",demoBtn:"Voir la démo",dmT:"Aperçu de ton site",newTab:"Ouvrir dans un nouvel onglet",waBtn:"Contact / confirmer le paiement sur WhatsApp",waRip:"Demander le RIP sur WhatsApp",waPay:"Bonjour, ma commande est {id}. Je souhaite confirmer le paiement et obtenir le RIP.",waAsk:"Bonjour, ma commande est {id}. J’ai une question.",errNet:"Connexion au serveur impossible. Vérifie internet et réessaie."},
+en:{st:"Order status",req:"Your request",ph:"Type your message...",send:"Send",empty:"Start the conversation: tell me what you need and I’ll reply here.",sub:"We reply here as soon as we can",pr:"Agreed price",pd:"Paid",bud:"Your budget",later:"Budget: let’s agree after we talk",nf:"This order doesn’t exist",back:"Back to home",th:"Theme",demo:"Preview your site (demo)",demoNote:"A preview version to test before payment.",openDemo:"Open demo",payT:"Pay via CCP",payNote:"Happy with the demo? Pay via CCP, then send the proof (receipt photo or transaction number) in the chat. Once confirmed, your final link appears here.",due:"Amount due",finT:"Your final site link",open:"Open",copy:"Copy link",copied:"Copied ✓",copyFail:"Copy it manually",demoMsg:"Demo link to test your site before payment",finalMsg:"Payment confirmed! Here is your final site link",buy:"Buy",buyNote:"Like the demo? Click “Buy”, transfer the amount to the CCP account, then enter your transfer details.",toAcct:"1) Transfer the amount to this account",yourInfo:"2) Enter your transfer details",aNum:"CCP account number",aKey:"Key",aName:"Name (first and last)",amount:"Amount due (DZD)",noAcct:"Account details haven’t been added yet. Ask for them in the chat.",noPrice:"The price isn’t set yet. Message me in the chat first.",fRef:"Transfer reference / operation no. (optional)",fOk:"I confirm I transferred the amount above to the account shown.",pmNote:"The system records your order and payment notice, then the admin verifies the account and that the money arrived before delivering the final link.",pSend:"Send payment confirmation",cancel:"Cancel",errSum:"Fix the highlighted fields below and resubmit.",e:{req:"This field is required.",num:"Invalid number: 6 to 10 digits only.",key:"The key is 2 digits (e.g. 45).",name:"Enter first and last name, letters only.",ref:"Invalid reference: 4 to 30 letters or digits.",ok:"You must confirm the transfer."},vPend:"⏳ Waiting for the admin to verify the payment arrived.",vRej:"✕ Payment not accepted",retryPay:"Try again",vOk:"✓ Payment verified",sysSub:"Payment details sent. The admin will verify the account and that the money arrived before delivering the final link.",sysOk:"✓ Payment verified, delivery activated.",sysNo:"✕ Payment could not be verified",nfd:"Check the order number and try again, or go back home.",tried:"Entered number",idPh:"Order number e.g. AZD-7K3M9QXP",retry:"Try again",badId:"Invalid format (e.g. AZD-7K3M9QXP).",demoBtn:"View demo",dmT:"Preview your site",newTab:"Open in a new tab",waBtn:"Contact / confirm payment on WhatsApp",waRip:"Request the RIP on WhatsApp",waPay:"Hello, my order is {id}. I’d like to confirm payment and get the RIP.",waAsk:"Hello, my order is {id}. I have a question.",errNet:"Couldn’t reach the server. Check your connection and try again."}
 };
 const id = new URLSearchParams(location.search).get("order") || "";
 let lang = X[AZ.ls("lang")] ? AZ.ls("lang") : "ar", off;
 
+const money = n => AZ.money(n, lang);
+
 function side() {
   const o = AZ.DB.get(id), L = X[lang]; if (!o || !$("#side")) return;
-  const i = AZ.STAGES.indexOf(o.status === "closed" ? "delivered" : o.status), e = AZ.esc, m = n => AZ.money(n, lang);
-  const due = Math.max(0, o.price - AZ.paid(o)), ccp = AZ.ls("ccp");
+  const i = AZ.STAGES.indexOf(o.status === "closed" ? "delivered" : o.status), e = AZ.esc, c = o.ccp, st = c && c.status, due = Math.max(0, o.price - AZ.paid(o));
   $("#oid").textContent = o.id; $("#oid").dataset.s = o.status;
   let dl = "";
+  const wab = `<div class="wab"><a class="btn wide wa-btn" href="${AZ.wa(L[o.demoUrl && !o.unlocked ? "waPay" : "waAsk"].replace("{id}", o.id))}" target="_blank" rel="noopener">${L.waBtn}</a></div>`;
   if (o.unlocked && o.finalUrl) { // بعد تأكيد الدفع: الرابط النهائي + زر النسخ
-    dl = `<div class="dlv fin"><h3>${L.finT}</h3><code dir="ltr">${e(o.finalUrl)}</code><div class="lka"><a class="btn gh sm" href="${e(o.finalUrl)}" target="_blank" rel="noopener">${L.open}</a><button type="button" class="btn pri sm" data-copy="${e(o.finalUrl)}" data-t="${L.copy}" data-ok="${L.copied}" data-f="${L.copyFail}" aria-live="polite">${L.copy}</button></div></div>`;
-  } else if (o.demoUrl) { // قبل الدفع: الديمو + تعليمات CCP
-    dl = `<div class="dlv"><h3>${L.demo}</h3><p class="muted">${L.demoNote}</p><div class="lka"><a class="btn pri sm" href="${e(o.demoUrl)}" target="_blank" rel="noopener">${L.openDemo}</a></div></div>`
-      + `<div class="dlv"><h3>${L.payT}</h3><p class="muted">${L.payNote}</p>${due ? `<div class="kv"><span>${L.due}</span><b>${m(due)}</b></div>` : ""}${ccp ? `<p class="idea">${e(ccp)}</p>` : ""}</div>`;
+    dl = `<div class="dlv fin"><div class="vs ok">${L.vOk}</div><h3>${L.finT}</h3><code dir="ltr">${e(o.finalUrl)}</code><div class="lka"><a class="btn gh sm" href="${e(o.finalUrl)}" target="_blank" rel="noopener">${L.open}</a><button type="button" class="btn pri sm" data-copy="${e(o.finalUrl)}" data-t="${L.copy}" data-ok="${L.copied}" data-f="${L.copyFail}" aria-live="polite">${L.copy}</button></div></div>`;
+  } else if (o.demoUrl) { // قبل الدفع: الديمو + زر الشراء + حالة التحقق
+    const vs = st === "pending" ? `<div class="vs pend">${L.vPend}</div>` : st === "rejected" ? `<div class="vs rej">${L.vRej}${c.reason ? ": " + e(c.reason) : ""}</div>` : "";
+    const btn = !o.price ? `<p class="muted">${L.noPrice}</p>` : st === "pending" ? "" : `<button type="button" class="btn pri wide" data-buy>${st === "rejected" ? L.retryPay : L.buy}</button>`;
+    dl = `<div class="dlv"><h3>${L.demo}</h3><p class="muted">${L.demoNote}</p><div class="lka"><button type="button" class="btn gh sm" data-demo>${L.demoBtn}</button></div></div>`
+      + `<div class="dlv"><h3>${L.payT}</h3><p class="muted">${L.buyNote}</p>${o.price ? `<div class="kv"><span>${L.due}</span><b>${money(due)}</b></div>` : ""}${vs}${btn}</div>`;
   }
   $("#side").innerHTML = `<h3>${L.st}</h3><ol class="stages">${AZ.STAGES.map((s, k) => `<li class="${k < i ? "done" : k === i ? "cur" : ""}">${AZ.ST[s][lang]}</li>`).join("")}</ol>`
-    + (o.price ? `<div class="kv"><span>${L.pr}</span><b>${m(o.price)}</b></div><div class="kv"><span>${L.pd}</span><b>${m(AZ.paid(o))}</b></div>` : "")
+    + (o.price ? `<div class="kv"><span>${L.pr}</span><b>${money(o.price)}</b></div><div class="kv"><span>${L.pd}</span><b>${money(AZ.paid(o))}</b></div>` : "")
     + dl
     + `<h3>${L.req}</h3><div class="chips">${o.options.map(x => `<span class="tag">${e(x.t[lang])}</span>`).join("")}</div>`
-    + (o.budget ? `<div class="kv"><span>${L.bud}</span><b>${m(o.budget)}</b></div>` : o.budgetLater ? `<p class="muted">${L.later}</p>` : "")
-    + (o.freeText ? `<p class="idea">${e(o.freeText)}</p>` : "");
+    + (o.budget ? `<div class="kv"><span>${L.bud}</span><b>${money(o.budget)}</b></div>` : o.budgetLater ? `<p class="muted">${L.later}</p>` : "")
+    + (o.freeText ? `<p class="idea">${e(o.freeText)}</p>` : "") + wab;
+}
+
+/* ---- نافذة الشراء عبر CCP ---- */
+let lastFocus = null;
+function closePay() { $$(".modal").forEach(m => m.hidden = true); $("#dmb").innerHTML = ""; document.body.style.overflow = ""; lastFocus && lastFocus.focus && lastFocus.focus(); }
+function openPay() {
+  const o = AZ.DB.get(id), L = X[lang], e = AZ.esc, a = AZ.ccp(), c = o.ccp || {};
+  if (o.unlocked || c.status === "pending") return;
+  lastFocus = document.activeElement;
+  const cp = v => `<button type="button" class="btn gh sm" data-copy="${e(v)}" data-t="${L.copy}" data-ok="${L.copied}" data-f="${L.copyFail}">${L.copy}</button>`;
+  const acct = a.num ? [[L.aNum, a.num], [L.aKey, a.key], [L.aName, a.name]].map(([k, v]) => `<div class="kv"><span>${k}</span><span><b dir="ltr">${e(v)}</b>${cp(v)}</span></div>`).join("") : `<p class="err">${L.noAcct}</p>`;
+  const fld = (n, lab, v, x) => `<label class="fld"><span>${lab}</span><input name="${n}" value="${e(v || "")}" ${x}><small class="e" data-e="${n}"></small></label>`;
+  $("#pmb").innerHTML = `<button type="button" class="mclose" data-close aria-label="${L.cancel}">×</button><h2 id="pmT">${L.payT}</h2>
+    <div class="acct"><h3>${L.toAcct}</h3>${acct}<div class="kv"><span>${L.amount}</span><b>${o.price ? money(o.price) : "—"}</b></div>${o.price ? "" : `<p class="err">${L.noPrice}</p>`}<a class="btn gh sm" href="${AZ.wa(L.waPay.replace("{id}", o.id))}" target="_blank" rel="noopener">${L.waRip}</a></div>
+    <form id="pf" novalidate><h3>${L.yourInfo}</h3>
+      <div class="row2">${fld("num", L.aNum, c.num, 'inputmode="numeric" dir="ltr" autocomplete="off" maxlength="14"')}${fld("key", L.aKey, c.key, 'inputmode="numeric" dir="ltr" autocomplete="off" maxlength="2"')}</div>
+      ${fld("name", L.aName, c.name, 'autocomplete="off" maxlength="60"')}${fld("ref", L.fRef, c.ref, 'dir="ltr" autocomplete="off" maxlength="30"')}
+      <label class="chk"><input type="checkbox" name="ok"><span>${L.fOk}</span></label><small class="e" data-e="ok"></small>
+      <div class="nbox">${L.pmNote}</div><p class="errsum" id="pe" role="alert" hidden></p>
+      <div class="mact"><button type="button" class="btn gh" data-close>${L.cancel}</button><button class="btn pri">${L.pSend}</button></div></form>`;
+  const F = $("#pf").elements;
+  $("#pf").oninput = ev => { const s = $(`#pf [data-e="${ev.target.name}"]`); if (s) s.textContent = ""; ev.target.removeAttribute("aria-invalid"); };
+  $("#pf").onsubmit = ev => {
+    ev.preventDefault();
+    const r = AZ.ccpCheck({ num: F.namedItem("num").value, key: F.namedItem("key").value, name: F.namedItem("name").value, ref: F.namedItem("ref").value, ok: F.namedItem("ok").checked });
+    $$("#pf [data-e]").forEach(s => { const k = s.dataset.e, cd = r.err[k]; s.textContent = cd ? (cd === "req" && k !== "ok" ? L.e.req : L.e[k]) : ""; F.namedItem(k).setAttribute("aria-invalid", String(!!cd)); });
+    const bad = Object.keys(r.err), pe = $("#pe");
+    if (!AZ.DB.get(id).price) { pe.textContent = L.noPrice; pe.hidden = false; return; }
+    pe.hidden = !bad.length; pe.textContent = L.errSum;
+    if (bad.length) { F.namedItem(bad[0]).focus(); return; }
+    AZ.DB.update(id, x => { x.ccp = { status: "pending", ...r.v, amount: x.price, t: Date.now() }; x.messages.push({ from: "client", kind: "paysub", t: Date.now() }); });
+    closePay();
+  };
+  $("#pm").hidden = false; document.body.style.overflow = "hidden"; $("#pf input").focus();
+}
+function openDemo() { // معاينة الموقع داخل iframe بدون إظهار الرابط نصياً
+  const o = AZ.DB.get(id), L = X[lang], e = AZ.esc; if (!o || !o.demoUrl) return;
+  lastFocus = document.activeElement;
+  $("#dmb").innerHTML = `<div class="dmh"><b id="dmT">${L.dmT}</b><div class="lka"><a class="btn gh sm" href="${e(o.demoUrl)}" target="_blank" rel="noopener noreferrer">${L.newTab}</a><button type="button" class="dmx" data-close aria-label="${L.cancel}">×</button></div></div>`
+    + `<iframe class="dmf" title="${L.dmT}" src="${e(o.demoUrl)}" referrerpolicy="no-referrer" sandbox="allow-scripts allow-forms allow-popups allow-same-origin"></iframe>`;
+  $("#dm").hidden = false; document.body.style.overflow = "hidden"; $(".dmx").focus();
+}
+document.addEventListener("click", ev => {
+  if (ev.target.closest("[data-buy]")) openPay();
+  else if (ev.target.closest("[data-demo]")) openDemo();
+  else if (ev.target.closest("[data-close]") || ev.target.classList.contains("modal")) closePay();
+});
+document.addEventListener("keydown", ev => {
+  const md = [...$$(".modal")].find(m => !m.hidden); if (!md) return;
+  if (ev.key === "Escape") closePay();
+  if (ev.key === "Tab") { const f = [...md.querySelectorAll("button,input,a[href]")].filter(x => !x.disabled), a = f[0], z = f[f.length - 1];
+    if (ev.shiftKey && document.activeElement === a) { ev.preventDefault(); z.focus(); } else if (!ev.shiftKey && document.activeElement === z) { ev.preventDefault(); a.focus(); } }
+});
+
+/* ---- طلب غير موجود: رسالة واضحة + إعادة المحاولة ---- */
+function notFound(L) { // طلب غير موجود (أو تعذّر الاتصال)
+  $("#oid").hidden = true;
+  $("#app").innerHTML = `<div class="card nf"><h2>${netErr ? L.errNet : L.nf}</h2>`
+    + (netErr ? `<button class="btn pri" onclick="location.reload()">${L.retry}</button>`
+      : `<p class="muted">${id ? `${L.tried}: <b dir="ltr">${AZ.esc(id)}</b><br>` : ""}${L.nfd}</p>
+    <form id="nff"><input id="nid" dir="ltr" placeholder="${L.idPh}" aria-label="${L.idPh}" autocomplete="off"><button class="btn pri">${L.retry}</button></form><p class="err" id="nfe" role="alert"></p>`)
+    + `<a class="btn gh" href="index.html">${L.back}</a></div>`;
+  if ($("#nff")) $("#nff").onsubmit = ev => {
+    ev.preventDefault(); const v = $("#nid").value.trim().toUpperCase().replace(/^AZD-?/, "");
+    if (!/^[A-Z0-9]{8}$/.test(v)) { $("#nfe").textContent = L.badId; $("#nid").setAttribute("aria-invalid", "true"); return; }
+    location.href = "client.html?order=AZD-" + v;
+  };
 }
 
 function paint() {
@@ -64,7 +140,9 @@ function paint() {
   h.lang = lang; h.dir = lang === "ar" ? "rtl" : "ltr";
   $$(".lang button").forEach(b => b.classList.toggle("on", b.dataset.l === lang));
   $("#themeBtn").textContent = L.th;
-  if (!AZ.DB.get(id)) { $("#app").innerHTML = `<div class="card nf"><h2>${L.nf}</h2><a class="btn pri" href="index.html">${L.back}</a></div>`; return; }
+  closePay();
+  if (!AZ.DB.get(id)) { notFound(L); return; }
+  $("#oid").hidden = false;
   side(); off && off();
   off = AZ.Chat.mount($("#chat"), id, "client", { ...L, lang, title: "AZADOR-web" });
 }
@@ -72,7 +150,9 @@ function paint() {
 $$(".lang button").forEach(b => b.onclick = () => { lang = b.dataset.l; AZ.ls("lang", lang); paint(); });
 $("#themeBtn").onclick = AZ.Theme.toggle;
 AZ.DB.on(side);
-paint();
+let netErr = false;
+// تحميل الطلب من Firestore ثم الاستماع لتحديثات الأدمن لحظياً
+(/^AZD-[A-Z0-9]{8}$/.test(id) ? AZ.DB.watch(id) : Promise.resolve()).catch(e => { console.error(e); netErr = true; }).then(paint);
 </script>
 </body>
 </html>
