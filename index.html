@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AZADOR-web</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== 1) TOKENS: غيّر الهوية والثيم من هنا ===== */
+:root{--bg:#07080c;--s1:#0e1016;--s2:#161925;--bd:rgba(255,255,255,.08);--bd2:rgba(255,255,255,.17);--text:#f1f3f9;--soft:color-mix(in srgb,var(--text) 70%,transparent);--muted:#9aa1b3;--primary:#7c5cff;--accent:#2ee6c5;--on:#fff;--danger:#ff6b7a;--r:18px;--lh-h:1.2;--lh-b:1.75;--lh-s:1.65;--font:"Plus Jakarta Sans","Cairo",system-ui,sans-serif;--ease:cubic-bezier(.22,1,.36,1);--g1:rgba(124,92,255,.24);--g2:rgba(46,230,197,.11)}
+[data-theme=light]{--bg:#f5f6fb;--s1:#fff;--s2:#eef0f7;--bd:rgba(20,22,40,.09);--bd2:rgba(20,22,40,.2);--text:#12141c;--muted:#5d6477;--g1:rgba(124,92,255,.16);--g2:rgba(46,230,197,.15)}
+:root:lang(ar){--font:"Cairo",system-ui,sans-serif;--lh-h:1.5;--lh-b:1.95;--lh-s:1.95;font-size:106%}
+:root:lang(ar) *,:root:lang(ar) *::before{letter-spacing:0!important}
+
+/* ===== 2) BASE ===== */
+*{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:var(--lh-b);-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background .3s,color .3s}
+body::before{content:"";position:fixed;inset:-20%;z-index:-1;background:radial-gradient(40% 35% at 20% 15%,var(--g1),transparent 70%),radial-gradient(35% 30% at 85% 45%,var(--g2),transparent 70%);animation:drift 22s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate3d(3%,4%,0) scale(1.08)}}
+.wrap{width:min(1160px,100% - 2rem);margin-inline:auto}
+section{scroll-margin-top:80px}
+.sec{padding-block:4.5rem}
+.head{margin-bottom:2.5rem;max-width:60ch}
+.head p,.muted{color:var(--muted)}
+h1{font-size:clamp(2.3rem,5.4vw,4rem);line-height:var(--lh-h);padding-bottom:.1em;letter-spacing:-.025em;font-weight:800;background:linear-gradient(180deg,var(--text) 30%,color-mix(in srgb,var(--text) 55%,transparent));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-size:clamp(1.7rem,3vw,2.4rem);line-height:var(--lh-h);font-weight:800;letter-spacing:-.02em;margin-bottom:.4rem}
+h3{font-size:1.08rem;line-height:1.5;font-weight:700}
+:focus-visible{outline:2px solid var(--primary);outline-offset:3px}
+
+/* ===== 3) COMPONENTS ===== */
+.hdr{position:sticky;top:0;z-index:9;backdrop-filter:blur(14px);background:color-mix(in srgb,var(--bg) 72%,transparent);border-block-end:1px solid var(--bd)}
+.hdr .wrap{display:flex;align-items:center;justify-content:space-between;height:70px;gap:1rem}
+.logo{font-weight:800;font-size:1.3rem;letter-spacing:-.03em;color:inherit;text-decoration:none}
+.logo span{color:var(--primary)}
+.nav{display:flex;gap:.25rem}
+.nav a{color:var(--muted);text-decoration:none;padding:.4rem .8rem;border-radius:8px;transition:color .2s,background .2s}
+.nav a:hover{color:var(--text);background:var(--bd)}
+.act{display:flex;gap:.5rem;align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:.8rem 1.5rem;border-radius:12px;border:1px solid transparent;font:inherit;font-weight:700;line-height:1.45;color:var(--text);background:none;cursor:pointer;text-decoration:none;white-space:nowrap;transition:transform .2s var(--ease),box-shadow .2s,border-color .2s,background .2s}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(0) scale(.98)}
+.pri{background:linear-gradient(135deg,var(--primary),color-mix(in srgb,var(--primary) 55%,var(--accent)));color:var(--on);box-shadow:0 8px 24px -8px var(--primary)}
+.pri:hover{box-shadow:0 14px 32px -8px var(--primary)}
+.gh{border-color:var(--bd2)}.gh:hover{border-color:var(--primary);background:var(--bd)}
+.sm{padding:.45rem 1rem;font-size:.9rem;border-radius:9px}
+.lang,.tabs{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:4px}
+.lang{display:flex;gap:2px}
+.lang button,.tabs button{background:none;border:0;color:var(--muted);border-radius:8px;cursor:pointer;font:inherit;font-weight:700;transition:background .25s,color .25s}
+.lang button{padding:.25rem .65rem;font-size:.82rem;line-height:1.4}
+.lang button.on{background:var(--primary);color:var(--on)}
+.card{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.04),transparent),var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:1.4rem;transition:border-color .2s,transform .3s var(--ease),box-shadow .3s}
+.fx>*{position:relative}
+.fx::before{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(260px circle at var(--mx,50%) var(--my,0),color-mix(in srgb,var(--primary) 17%,transparent),transparent 70%);opacity:0;transition:opacity .3s;pointer-events:none}
+.fx:hover::before{opacity:1}
+.fx:hover{border-color:var(--bd2);transform:translateY(-4px);box-shadow:0 20px 40px -20px rgba(0,0,0,.55)}
+.grid{display:grid;gap:1rem}
+input,textarea{width:100%;font:inherit;color:var(--text);background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:.75rem 1rem;transition:border-color .2s,box-shadow .2s}
+input:focus,textarea:focus{outline:0;border-color:var(--primary);box-shadow:0 0 0 4px color-mix(in srgb,var(--primary) 20%,transparent)}
+textarea{resize:vertical}
+
+/* ===== 4) HERO ===== */
+.hero{position:relative;padding-block:5.5rem 3rem;text-align:center}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(var(--bd) 1px,transparent 1px) 0 0/52px 52px,linear-gradient(90deg,var(--bd) 1px,transparent 1px) 0 0/52px 52px;-webkit-mask-image:radial-gradient(60% 60% at 50% 30%,#000,transparent);mask-image:radial-gradient(60% 60% at 50% 30%,#000,transparent)}
+.hero h1{max-width:18ch;margin-inline:auto}
+.hero p{max-width:54ch;margin:1.2rem auto 2rem;font-size:1.12rem;color:var(--soft)}
+.cta{display:flex;gap:.9rem;justify-content:center;flex-wrap:wrap}
+.mock{position:relative;width:min(760px,100%);margin:4rem auto 0;border:1px solid var(--bd2);border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.05),transparent),var(--s1);box-shadow:0 40px 90px -30px rgba(124,92,255,.5)}
+.mock .bar{display:flex;gap:6px;padding:12px 16px;border-block-end:1px solid var(--bd)}
+.bar i{width:10px;height:10px;border-radius:50%;background:var(--bd2)}
+.screen{padding:24px;display:grid;gap:12px;direction:ltr}
+.screen b{display:block;height:14px;border-radius:7px;background:var(--bd2)}
+.screen .l1{width:45%;height:24px;background:linear-gradient(90deg,var(--primary),var(--accent))}
+.screen .l2{width:70%}
+.blocks{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px}
+.blocks u{height:96px;border-radius:12px;background:var(--s2);border:1px solid var(--bd)}
+.chip{position:absolute;display:flex;align-items:center;gap:.5rem;padding:.45rem .95rem;border-radius:99px;background:var(--s2);border:1px solid var(--bd2);font-size:.85rem;font-weight:700;box-shadow:0 12px 30px -10px rgba(0,0,0,.6);animation:float 6s ease-in-out infinite alternate}
+.c1{top:-18px;inset-inline-end:8%}
+.c2{bottom:-16px;inset-inline-start:8%;animation-delay:-3s;color:var(--accent)}
+.chip s{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(46,230,197,.22)}
+@keyframes float{to{transform:translateY(-8px)}}
+
+/* ===== 5) PROCESS ===== */
+.steps{list-style:none;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;position:relative}
+.steps::before{content:"";position:absolute;inset-inline:10%;top:23px;height:2px;background:linear-gradient(90deg,transparent,var(--bd2),transparent)}
+.steps li{position:relative;text-align:center;padding-inline:.4rem}
+.steps p{color:var(--muted);font-size:.92rem;line-height:1.65;margin-top:.3rem}
+.n{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;margin:0 auto 1rem;background:var(--s1);border:1px solid var(--bd2);font-weight:800;color:var(--accent);position:relative;transition:box-shadow .3s,border-color .3s}
+.steps li:hover .n{border-color:var(--accent);box-shadow:0 0 0 6px rgba(46,230,197,.14)}
+@media(max-width:860px){.steps{grid-template-columns:1fr;gap:1.5rem}.steps::before{inset:0 auto 0 23px;inset-inline:23px auto;width:2px;height:auto;top:0;background:var(--bd2)}.steps li{display:grid;grid-template-columns:48px 1fr;gap:0 1rem;text-align:start;padding:0}.n{grid-row:span 2;margin:0}.nav,.hide-s{display:none}}
+
+/* ===== 6) WORK ===== */
+.work{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.thumb{height:130px;border-radius:12px;margin-bottom:1rem;padding:14px;display:flex;flex-direction:column;gap:8px;border:1px solid var(--bd);background:linear-gradient(135deg,hsl(var(--h) 85% 60% / .5),hsl(calc(var(--h) + 45) 85% 50% / .12));direction:ltr}
+.thumb i{display:block;height:9px;border-radius:5px;background:rgba(255,255,255,.3)}
+.thumb i:nth-child(1){width:40%}.thumb i:nth-child(2){width:70%;opacity:.6}
+.thumb i:nth-child(3){width:55%;height:38px;margin-top:auto;border-radius:9px;background:rgba(255,255,255,.2)}
+.work p{color:var(--soft);font-size:.92rem;margin-top:.25rem}
+
+/* ===== 7) BUILDER ===== */
+.tabs{position:relative;display:inline-grid;grid-template-columns:1fr 1fr;margin-bottom:1.75rem}
+.tabs i{position:absolute;inset-block:4px;inset-inline-start:4px;width:calc(50% - 4px);border-radius:9px;background:var(--primary);box-shadow:0 6px 18px -6px var(--primary);transition:transform .35s var(--ease)}
+.tabs[data-m=budget] i{transform:translateX(100%)}
+[dir=rtl] .tabs[data-m=budget] i{transform:translateX(-100%)}
+.tabs button{position:relative;z-index:1;padding:.6rem 1.4rem;font-size:1rem;line-height:1.5}
+.tabs button.on{color:var(--on)}
+.builder{display:grid;grid-template-columns:1fr 350px;gap:1.5rem;align-items:start}
+@media(max-width:900px){.builder{grid-template-columns:1fr}}
+.pane.enter{animation:paneIn .35s var(--ease) both}.pane.leave{opacity:0;transform:translateY(-8px);transition:opacity .16s,transform .16s}
+@keyframes paneIn{from{opacity:0;transform:translateY(12px)}}
+#opts h3{margin:1.6rem 0 .8rem;font-size:.95rem;color:var(--muted)}
+#opts h3:first-child{margin-top:0}
+#opts .grid{grid-template-columns:repeat(auto-fit,minmax(270px,1fr))}
+.opt{display:flex;gap:.9rem;align-items:flex-start;text-align:start;font:inherit;color:inherit;cursor:pointer;padding:1.1rem 1.2rem}
+.opt.on{border-color:var(--primary);background:linear-gradient(180deg,color-mix(in srgb,var(--primary) 14%,transparent),transparent),var(--s1);box-shadow:0 0 0 1px var(--primary),0 14px 34px -16px var(--primary)}
+.tx{flex:1;display:grid;gap:.15rem}
+.tx b{font-size:1.02rem}
+.tx small{color:var(--soft);font-size:.9rem;line-height:1.6}
+.opt em{font-style:normal;font-weight:800;color:var(--accent);background:rgba(46,230,197,.1);padding:.1rem .6rem;border-radius:99px;font-size:.88rem}
+.ck{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--bd2);flex:none;margin-top:3px;display:grid;place-items:center;transition:background .25s,border-color .25s}
+.ck::after{content:"";width:10px;height:6px;border:2px solid var(--on);border-top:0;border-right:0;transform:rotate(-45deg) scale(0);margin-top:-2px;transition:transform .3s var(--ease)}
+.on .ck{background:var(--primary);border-color:var(--primary)}
+.on .ck::after{transform:rotate(-45deg) scale(1)}
+.big{font-size:clamp(2.4rem,6vw,3.4rem);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin:.4rem 0 1.2rem}
+.rng{--v:20%;-webkit-appearance:none;appearance:none;direction:ltr;width:100%;height:8px;padding:0;border:0;border-radius:99px;cursor:pointer;background:linear-gradient(90deg,var(--primary),var(--accent)) left/var(--v) 100% no-repeat,var(--s2)}
+.rng:focus{box-shadow:none}
+.rng::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#fff;border:7px solid var(--primary);box-shadow:0 0 0 6px color-mix(in srgb,var(--primary) 22%,transparent);transition:box-shadow .2s}
+.rng::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:7px solid var(--primary);box-shadow:0 0 0 6px color-mix(in srgb,var(--primary) 22%,transparent)}
+.rng:active::-webkit-slider-thumb{box-shadow:0 0 0 11px color-mix(in srgb,var(--primary) 22%,transparent)}
+.ends{display:flex;justify-content:space-between;direction:ltr;margin-top:.7rem;color:var(--muted);font-size:.85rem}
+.lbl{display:block;margin:1.75rem 0 .5rem;font-weight:700}
+.sum{position:sticky;top:90px;display:flex;flex-direction:column;gap:.85rem;padding:1.5rem}
+.sum ul{list-style:none;padding:0;display:grid;gap:.45rem;font-size:.92rem}
+.sum li{display:flex;justify-content:space-between;gap:.5rem;padding-block-end:.45rem;border-block-end:1px dashed var(--bd)}
+.tot{display:flex;justify-content:space-between;align-items:baseline;padding-block-start:.4rem}
+#total{display:inline-block;font-size:2rem;font-weight:800;letter-spacing:-.02em;background:linear-gradient(90deg,var(--text),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+#total.bump{animation:bump .3s var(--ease)}
+@keyframes bump{40%{transform:scale(1.14)}}
+#ok{font-size:.9rem;color:var(--accent)}#ok.err{color:var(--danger)}
+footer{padding-block:2.5rem;text-align:center;border-block-start:1px solid var(--bd);font-size:.9rem;color:var(--muted)}
+
+/* ===== 8) MOTION: الظهور التدريجي (طبقة مركزية) ===== */
+[data-a]{opacity:0;transform:translateY(26px);transition:opacity .6s var(--ease),transform .6s var(--ease);transition-delay:calc(var(--i,0)*70ms)}
+[data-a].in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}[data-a]{opacity:1;transform:none}html{scroll-behavior:auto}}
+/* ===== 9) تعديلات: وضوح الخط + خيار الاتفاق ===== */
+.tx b{font-size:1.05rem;line-height:1.5}
+.tx small{font-size:.94rem}
+.steps p,.work p{font-size:.95rem}
+.tx small,.steps p,.work p,.head p,.sum li,.note,#ok{line-height:var(--lh-s)}
+#opts h3{font-size:1rem;line-height:1.5}
+.chip{line-height:1.4}
+.opt:active{transform:scale(.985)}
+.later{width:100%;margin-top:1.25rem}
+#rb{transition:opacity .25s,filter .25s}
+#rb.dim{opacity:.35;filter:saturate(0);pointer-events:none}
+.note{font-size:.88rem;color:var(--muted);border-block-start:1px dashed var(--bd);padding-block-start:.8rem}
+#total{line-height:1.5}
+#total.txt{font-size:1.05rem;font-weight:700}
+.tot span{font-size:.95rem}
+
+/* ===== OLD MONEY: عاجي / أخضر عميق / ذهب مطفي (غيّر الهوية من هنا) ===== */
+:root{--bg:#0f1511;--s1:#161d18;--s2:#1e2820;--bd:rgba(216,190,140,.14);--bd2:rgba(216,190,140,.3);--text:#efe8d8;--muted:#a39c88;--primary:#c4a469;--accent:#e0c88f;--on:#17130a;--danger:#d9796c;--st-rev:#d9b56a;--st-quo:#8fb0d2;--st-del:#7fbf98;--g1:rgba(196,164,105,.12);--g2:rgba(70,120,90,.16);--r:8px;--font:"Inter","Cairo",system-ui,sans-serif;--font-h:"Cormorant Garamond","Amiri",Georgia,serif}
+:root:lang(ar){--font:"Cairo",system-ui,sans-serif;--font-h:"Amiri","Cormorant Garamond",Georgia,serif}
+[data-theme=light]{--bg:#f4eee1;--s1:#fbf8f0;--s2:#ece4d2;--bd:rgba(70,52,22,.15);--bd2:rgba(70,52,22,.3);--text:#1e2822;--muted:#6a6454;--primary:#21463a;--accent:#8a6a2f;--on:#f7f2e6;--danger:#a63d33;--st-rev:#9a6f1e;--st-quo:#3f6288;--st-del:#2f6a48;--g1:rgba(168,133,74,.16);--g2:rgba(33,70,58,.08)}
+::selection{background:var(--accent);color:var(--bg)}
+h1,h2,.logo,.big,#total,.kpi b{font-family:var(--font-h);font-weight:600}
+h1{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--text);letter-spacing:-.01em}
+#total{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--text)}
+.logo{font-weight:700;letter-spacing:.06em}.logo span{color:var(--accent)}
+.btn{border-radius:4px;letter-spacing:.02em}.btn:hover{transform:translateY(-1px)}.sm{border-radius:3px}
+.pri{background:var(--primary);color:var(--on);border-color:var(--accent);box-shadow:none}
+.pri:hover{box-shadow:0 10px 22px -12px var(--primary);filter:brightness(1.08)}
+.gh:hover{border-color:var(--accent);background:transparent}
+input,select,textarea{border-radius:4px}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+.lang,.tabs{border-radius:6px}.lang button,.tabs button,.tabs i{border-radius:4px}.tabs i{box-shadow:none}
+.mock{border-radius:10px;box-shadow:0 30px 60px -30px rgba(30,25,10,.4)}
+.thumb{border-radius:4px;background:linear-gradient(135deg,hsl(var(--h) 30% 50% / .5),hsl(var(--h) 28% 35% / .12))}
+.idea{border-radius:6px}
+.tag,.bdg{border-radius:3px}
+.tag[data-s=reviewing]{--c:var(--st-rev)}.tag[data-s=quoted]{--c:var(--st-quo)}.tag[data-s=delivered]{--c:var(--st-del)}
+.msg p{border-radius:10px}.me p{background:var(--primary);color:var(--on);border-end-end-radius:2px}.them p{border-end-start-radius:2px}
+.fx::before{background:radial-gradient(260px circle at var(--mx,50%) var(--my,0),color-mix(in srgb,var(--accent) 15%,transparent),transparent 70%)}
+.fx:hover{transform:translateY(-3px);box-shadow:0 14px 30px -18px rgba(30,25,10,.45)}
+.opt.on{box-shadow:0 0 0 1px var(--primary)}
+.chip{box-shadow:0 8px 20px -10px rgba(30,25,10,.4)}.chip s{background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 25%,transparent)}
+.steps li:hover .n{border-color:var(--accent);box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 16%,transparent)}
+.n{font-family:var(--font-h);font-size:1.3rem;font-weight:700}
+.hero::before{opacity:.5}
+.theming *,.theming *::before,.theming *::after{transition:background-color .45s ease,color .45s ease,border-color .45s ease,box-shadow .45s ease!important}
+h1{font-size:clamp(2.7rem,6vw,4.8rem);line-height:1.12}
+:root:lang(ar) h1{font-size:clamp(2.3rem,5.2vw,3.9rem);line-height:var(--lh-h)}
+h2{font-size:clamp(2rem,3.6vw,2.9rem);line-height:1.2}
+:root:lang(ar) h2{font-size:clamp(1.7rem,3vw,2.4rem);line-height:var(--lh-h)}
+.head h2::after{content:"";display:block;width:56px;height:1px;background:var(--accent);margin-top:.6rem}
+.tx b,.steps h3,.work h3,.sum h3{font-family:var(--font-h);font-size:1.22rem;font-weight:700;line-height:1.4}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="wrap">
+    <a href="#" class="logo">AZADOR<span>-web</span></a>
+    <nav class="nav"><a href="#process" data-i="nav1"></a><a href="#work" data-i="nav2"></a></nav>
+    <div class="act">
+      <div class="lang"><button data-l="ar">AR</button><button data-l="fr">FR</button><button data-l="en">EN</button></div>
+      <button id="themeBtn" class="btn gh sm" data-i="th"></button>
+      <a href="#build" class="btn pri sm hide-s" data-i="nav3"></a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap">
+    <h1 data-a data-i="ht"></h1>
+    <p data-a style="--i:1" data-i="hs"></p>
+    <div class="cta" data-a style="--i:2">
+      <a href="#build" class="btn pri" data-go="features" data-i="h1"></a>
+      <a href="#build" class="btn gh" data-go="budget" data-i="h2"></a>
+    </div>
+    <div class="mock" data-a style="--i:3">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <div class="screen"><b class="l1"></b><b class="l2"></b><div class="blocks"><u></u><u></u><u></u></div></div>
+      <span class="chip c1"><s></s><span data-i="live"></span></span>
+      <span class="chip c2">✓ SEO</span>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="process">
+    <div class="head" data-a><h2 data-i="pt"></h2><p data-i="ps"></p></div>
+    <ol class="steps" id="steps"></ol>
+  </section>
+
+  <section class="sec wrap" id="work">
+    <div class="head" data-a><h2 data-i="wt"></h2><p data-i="ws"></p></div>
+    <div class="grid work" id="workGrid"></div>
+  </section>
+
+  <!-- ===== Build Your Site ===== -->
+  <section class="sec wrap" id="build">
+    <div class="head" data-a><h2 data-i="bt"></h2><p data-i="bs"></p></div>
+    <div class="tabs" id="tabs" data-m="features">
+      <i></i>
+      <button class="on" data-m="features" data-i="m1"></button>
+      <button data-m="budget" data-i="m2"></button>
+    </div>
+
+    <div class="builder">
+      <div>
+        <div class="pane enter" id="pF"><div id="opts"></div></div>
+        <div class="pane card" id="pB" hidden>
+          <label class="muted" for="bud" data-i="bud"></label>
+          <div id="rb"><div class="big" id="budOut"></div>
+          <input type="range" class="rng" id="bud" min="10000" max="500000" step="5000" value="50000">
+          <div class="ends"><span id="lo"></span><span id="hi"></span></div></div>
+          <button type="button" class="card fx opt later" id="later" aria-pressed="false"><span class="ck"></span><span class="tx"><b data-i="later"></b><small data-i="laterd"></small></span></button>
+          <p class="muted" style="margin-top:1rem;font-size:.92rem" data-i="budh"></p>
+        </div>
+        <label class="lbl" for="idea" data-i="idea"></label>
+        <textarea id="idea" rows="5" data-ph="ph"></textarea>
+      </div>
+
+      <aside class="card sum">
+        <h3 data-i="sum"></h3>
+        <ul id="list"></ul>
+        <div class="tot"><span class="muted" id="totL"></span><strong id="total"></strong></div>
+        <p class="note" data-i="note"></p>
+        <input id="nm" data-ph="name" autocomplete="name">
+        <input id="em" type="tel" inputmode="tel" dir="auto" data-ph="phone" autocomplete="tel">
+        <button class="btn pri" id="send" data-i="send"></button>
+        <p id="ok" hidden></p>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<footer>© 2026 AZADOR-web</footer>
+
+<script>setTimeout(()=>document.querySelectorAll("[data-a]").forEach(e=>e.classList.add("in")),1500)</script>
+<script src="azador.js"></script>
+<script>
+/* ===== DATA: النصوص والخيارات (لاحقاً تأتي من Firestore) ===== */
+const HAS = typeof AZ !== "undefined";
+const money = n => HAS ? AZ.money(n, lang) : Math.round(n).toLocaleString("en") + " DA"; // العملة (دج) تُغيَّر من azador.js
+
+const T = {
+ar:{th:"الثيم",nav1:"طريقة العمل",nav2:"مجالات العمل",nav3:"ابنِ موقعك",live:"قيد التنفيذ",
+ht:"نصنع مواقع تُبهر زبائنك",hs:"مواقع عصرية وسريعة، مصمّمة حسب فكرتك وميزانيتك، مع متابعة مباشرة لطلبك.",h1:"ابنِ موقعك الآن",h2:"ابدأ بميزانيتك",
+pt:"طريقة عملنا",ps:"من أول فكرة إلى يوم التسليم، تعرف دائماً أين وصل مشروعك.",
+s1t:"الفكرة",s1d:"تشرح فكرتك أو تختار المميزات من النظام مباشرة.",s2t:"العرض والسعر",s2d:"نرسل لك سعراً ومدة تنفيذ واضحين قبل أي التزام.",s3t:"التصميم",s3d:"تصميم يعكس هويتك، تعتمده قبل بدء البرمجة.",s4t:"التطوير",s4d:"نبني موقعك وتتابع حالته وتحادثنا عبر الشات الخاص.",s5t:"التسليم والدعم",s5d:"نطلق الموقع على نطاقك ونبقى معك بعد التسليم.",
+wt:"مجالات نعمل فيها",ws:"أنواع المواقع التي نبنيها، ولكل مجال تصميمه ومميزاته.",
+w1t:"مطاعم ومقاهي",w1d:"قائمة طعام وحجز طاولات وخريطة للوصول إليك.",w2t:"متاجر إلكترونية",w2d:"منتجات وسلة شراء وإدارة للطلبات.",w3t:"عيادات وخدمات",w3d:"مواعيد أونلاين وتذكير للزبائن.",w4t:"شركات وأعمال حرة",w4d:"موقع تعريفي ومعرض أعمال يجلب العملاء.",
+bt:"ابنِ موقعك",bs:"اختر الأفكار والمميزات التي تلائم مشروعك، أو اكتب فكرتك بحرية، وسنحدد التفاصيل معاً.",m1:"اختر المميزات",m2:"حسب ميزانيتك",
+cats:["الأساس","المميزات","إضافات"],bud:"ميزانيتك",budh:"اشرح لنا في الأسفل ما تريده، وسنقترح عليك ما يناسب ميزانيتك.",
+idea:"اشرح فكرتك بطريقتك",ph:"مثال: أريد موقعاً لمطعمي مع قائمة طعام وحجز طاولات...",sum:"ملخص طلبك",none:"لم تختر شيئاً بعد",later:"نتفق بعد التواصل",laterd:"لا أريد تحديد رقم الآن، نناقش الميزانية معاً بعد أن تفهم طلبي.",bl:"ميزانيتك",cnt:"المميزات المختارة",note:"لا يوجد سعر نهائي هنا: نحدّده معك بعد فهم طلبك.",
+name:"اسمك",phone:"رقم هاتفك",send:"أرسل الطلب",err:"أدخل اسمك ورقم هاتف صحيحاً.",ok:"✓ تم إرسال طلبك! نفتح لك الشات الآن..."},
+fr:{th:"Thème",nav1:"Méthode",nav2:"Domaines",nav3:"Crée ton site",live:"En cours",
+ht:"Des sites web qui impressionnent vos clients",hs:"Des sites modernes et rapides, conçus selon ton idée et ton budget, avec un suivi en direct.",h1:"Crée ton site",h2:"Commence par ton budget",
+pt:"Notre méthode",ps:"De la première idée à la livraison, tu sais toujours où en est ton projet.",
+s1t:"L’idée",s1d:"Tu décris ton idée ou tu choisis les options directement.",s2t:"Devis",s2d:"Tu reçois un prix et un délai clairs avant tout engagement.",s3t:"Design",s3d:"Un design à l’image de ta marque, validé avant le code.",s4t:"Développement",s4d:"On construit ton site, tu suis l’avancement et tu nous écris dans le chat.",s5t:"Livraison et suivi",s5d:"Mise en ligne sur ton domaine, puis support après la livraison.",
+wt:"Domaines où on intervient",ws:"Les types de sites qu’on construit, chacun avec son design et ses fonctionnalités.",
+w1t:"Restaurants et cafés",w1d:"Menu, réservation de tables et carte d’accès.",w2t:"Boutiques en ligne",w2d:"Produits, panier et gestion des commandes.",w3t:"Cliniques et services",w3d:"Rendez-vous en ligne et rappels clients.",w4t:"Entreprises et freelances",w4d:"Site vitrine et portfolio qui attirent des clients.",
+bt:"Crée ton site",bs:"Choisis les idées et fonctionnalités qui te conviennent, ou décris ton projet librement ; on précisera les détails ensemble.",m1:"Choisir les options",m2:"Selon ton budget",
+cats:["Base","Fonctionnalités","Extras"],bud:"Ton budget",budh:"Explique ci-dessous ce que tu veux, on te proposera ce qui convient à ton budget.",
+idea:"Explique ton idée à ta façon",ph:"Ex : un site pour mon restaurant avec menu et réservation...",sum:"Résumé de ta demande",none:"Rien de sélectionné",later:"On en parle après",laterd:"Je ne fixe pas de chiffre maintenant : on discute du budget une fois ma demande comprise.",bl:"Ton budget",cnt:"Options choisies",note:"Pas de prix final ici : on le fixe avec toi après avoir compris ta demande.",
+name:"Ton nom",phone:"Ton numéro de téléphone",send:"Envoyer la demande",err:"Entre ton nom et un numéro valide.",ok:"✓ Demande envoyée ! On ouvre ton chat..."},
+en:{th:"Theme",nav1:"Process",nav2:"Work",nav3:"Build your site",live:"In progress",
+ht:"We build websites that wow your clients",hs:"Modern, fast sites designed around your idea and your budget, with live order tracking.",h1:"Build your site",h2:"Start with your budget",
+pt:"How we work",ps:"From the first idea to launch day, you always know where your project stands.",
+s1t:"Idea",s1d:"Describe your idea or pick features straight from the builder.",s2t:"Quote",s2d:"You get a clear price and timeline before any commitment.",s3t:"Design",s3d:"A design that reflects your brand, approved before we code.",s4t:"Development",s4d:"We build your site; you follow progress and chat with us.",s5t:"Launch & support",s5d:"We go live on your domain and stay with you after delivery.",
+wt:"Fields we work in",ws:"The kinds of sites we build, each with its own design and features.",
+w1t:"Restaurants & cafés",w1d:"Menu, table booking and a map to find you.",w2t:"Online stores",w2d:"Products, cart and order management.",w3t:"Clinics & services",w3d:"Online appointments and client reminders.",w4t:"Companies & freelancers",w4d:"A showcase site and portfolio that wins clients.",
+bt:"Build your site",bs:"Pick the ideas and features that fit your project, or just describe it in your own words; we’ll sort out the details together.",m1:"Pick features",m2:"By budget",
+cats:["Foundation","Features","Extras"],bud:"Your budget",budh:"Describe what you want below and we’ll suggest what fits your budget.",
+idea:"Describe your idea your way",ph:"e.g. A site for my restaurant with a menu and table booking...",sum:"Your order summary",none:"Nothing selected yet",later:"Let’s agree after we talk",laterd:"I’d rather not set a number yet. Let’s discuss the budget after you’ve reviewed my request.",bl:"Your budget",cnt:"Selected features",note:"No final price here: we set it with you after understanding your request.",
+name:"Your name",phone:"Your phone number",send:"Send request",err:"Enter your name and a valid phone number.",ok:"✓ Request sent! Opening your chat..."}
+};
+
+const O = [ // c = رقم الفئة في cats (أفكار استرشادية بلا أسعار)
+{id:"landing",c:0,t:{ar:"صفحة هبوط",fr:"Page vitrine",en:"Landing page"},d:{ar:"صفحة واحدة تعرّف بنشاطك وتدفع الزائر للتواصل معك. مناسبة لإطلاق سريع.",fr:"Une seule page qui présente ton activité et pousse le visiteur à te contacter. Idéale pour un lancement rapide.",en:"One page that presents your business and nudges visitors to contact you. Great for a quick launch."}},
+{id:"multi",c:0,t:{ar:"موقع متعدد الصفحات",fr:"Site multi-pages",en:"Multi-page site"},d:{ar:"رئيسية ومن نحن وخدمات واتصال، بتنقّل واضح وهوية موحّدة.",fr:"Accueil, à propos, services et contact, avec une navigation claire.",en:"Home, about, services and contact, with clear navigation."}},
+{id:"gallery",c:0,t:{ar:"معرض أعمال",fr:"Portfolio",en:"Portfolio gallery"},d:{ar:"اعرض مشاريعك وصورك بشكل جذاب يقنع الزبون الجديد.",fr:"Présente tes projets et tes photos de façon à convaincre les nouveaux clients.",en:"Showcase your projects and photos in a way that wins over new clients."}},
+{id:"store",c:1,t:{ar:"متجر إلكتروني",fr:"Boutique en ligne",en:"Online store"},d:{ar:"عرض المنتجات وسلة شراء واستقبال الطلبات وإدارتها.",fr:"Catalogue de produits, panier, réception et suivi des commandes.",en:"Product catalog, cart, and receiving and managing orders."}},
+{id:"booking",c:1,t:{ar:"نظام حجز",fr:"Système de réservation",en:"Booking system"},d:{ar:"يحجز زبائنك المواعيد مباشرة من الموقع بدل المكالمات.",fr:"Tes clients réservent un rendez-vous directement sur le site.",en:"Clients book appointments on the site instead of calling."}},
+{id:"dash",c:1,t:{ar:"لوحة تحكم",fr:"Tableau de bord",en:"Admin dashboard"},d:{ar:"تعدّل محتوى موقعك وتتابع بياناتك بنفسك دون برمجة.",fr:"Modifie le contenu et suis tes données toi-même, sans coder.",en:"Edit your content and follow your data yourself, no coding."}},
+{id:"seo",c:2,t:{ar:"تحسين SEO",fr:"Optimisation SEO",en:"SEO optimization"},d:{ar:"ليسهل العثور على موقعك في نتائج البحث.",fr:"Pour que ton site soit facile à trouver sur les moteurs de recherche.",en:"So your site is easy to find in search results."}},
+{id:"langs",c:2,t:{ar:"ثلاث لغات",fr:"Trois langues",en:"Three languages"},d:{ar:"الموقع بالعربية والفرنسية والإنجليزية مع تبديل سريع.",fr:"Site en arabe, français et anglais avec changement rapide.",en:"Site in Arabic, French and English with quick switching."}}
+];
+
+/* ===== LOGIC ===== */
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const store = (k, v) => { try { return v === undefined ? localStorage.getItem(k) : localStorage.setItem(k, v); } catch (e) {} };
+let lang = T[store("lang")] ? store("lang") : "ar", mode = "features", later = false;
+const sel = new Set();
+
+/* أقسام ثابتة تُبنى مرة واحدة */
+$("#steps").innerHTML = [1,2,3,4,5].map(n => `<li data-a style="--i:${n}"><span class="n">${n}</span><h3 data-i="s${n}t"></h3><p data-i="s${n}d"></p></li>`).join("");
+$("#workGrid").innerHTML = [[1,150],[2,38],[3,18],[4,210]].map(([n,h]) => `<article class="card fx" data-a style="--i:${n};--h:${h}"><div class="thumb"><i></i><i></i><i></i></div><h3 data-i="w${n}t"></h3><p data-i="w${n}d"></p></article>`).join("");
+
+function renderOptions() {
+  const box = $("#opts"); box.innerHTML = "";
+  T[lang].cats.forEach((name, ci) => {
+    const h = document.createElement("h3"); h.textContent = name;
+    const g = document.createElement("div"); g.className = "grid";
+    O.filter(o => o.c === ci).forEach(o => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "card fx opt" + (sel.has(o.id) ? " on" : "");
+      b.setAttribute("aria-pressed", sel.has(o.id));
+      b.innerHTML = `<span class="ck"></span><span class="tx"><b>${o.t[lang]}</b><small>${o.d[lang]}</small></span>`;
+      b.onclick = () => {
+        sel.has(o.id) ? sel.delete(o.id) : sel.add(o.id);
+        b.classList.toggle("on"); b.setAttribute("aria-pressed", sel.has(o.id)); update();
+      };
+      g.append(b);
+    });
+    box.append(h, g);
+  });
+}
+
+function update() {
+  const bg = mode === "budget", r = $("#bud"), v = +r.value, L = T[lang];
+  r.style.setProperty("--v", (v - r.min) / (r.max - r.min) * 100 + "%");
+  const picked = O.filter(o => sel.has(o.id));
+  $("#list").innerHTML = picked.map(o => `<li><span>${o.t[lang]}</span></li>`).join("") || `<li class="muted">${L.none}</li>`;
+  $("#budOut").textContent = money(v);
+  $("#lo").textContent = money(+r.min); $("#hi").textContent = money(+r.max);
+  $("#totL").textContent = bg ? L.bl : L.cnt;
+  const el = $("#total"), txt = bg && later;
+  el.textContent = txt ? L.later : bg ? money(v) : picked.length;
+  el.classList.toggle("txt", txt);
+  el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump");
+}
+
+function setLang(l) {
+  lang = l; store("lang", l);
+  const h = document.documentElement; h.lang = l; h.dir = l === "ar" ? "rtl" : "ltr";
+  $$("[data-i]").forEach(e => e.textContent = T[l][e.dataset.i]);
+  $$("[data-ph]").forEach(e => e.placeholder = T[l][e.dataset.ph]);
+  $$(".lang button").forEach(b => b.classList.toggle("on", b.dataset.l === l));
+  renderOptions(); update();
+}
+
+let sw;
+function setMode(m) {
+  if (m === mode) return;
+  mode = m; $("#tabs").dataset.m = m;
+  $$(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.m === m));
+  const [on, off] = m === "budget" ? ["#pB", "#pF"] : ["#pF", "#pB"];
+  clearTimeout(sw); $(off).classList.add("leave");
+  sw = setTimeout(() => { // خروج سريع ثم دخول ناعم
+    $$(".pane").forEach(p => { p.hidden = true; p.classList.remove("leave", "enter"); });
+    const p = $(on); p.hidden = false; void p.offsetWidth; p.classList.add("enter");
+  }, 160);
+  update();
+}
+$("#later").onclick = e => {
+  later = !later; e.currentTarget.classList.toggle("on", later); e.currentTarget.setAttribute("aria-pressed", later);
+  $("#rb").classList.toggle("dim", later); update();
+};
+
+$$(".lang button").forEach(b => b.onclick = () => setLang(b.dataset.l));
+$$(".tabs button").forEach(b => b.onclick = () => setMode(b.dataset.m));
+$$("[data-go]").forEach(a => a.onclick = () => setMode(a.dataset.go));
+$("#bud").oninput = update;
+
+$("#themeBtn").onclick = () => {
+  const r = document.documentElement;
+  r.classList.add("theming");
+  r.dataset.theme = r.dataset.theme === "light" ? "dark" : "light";
+  store("mode", r.dataset.theme);
+  setTimeout(() => r.classList.remove("theming"), 600);
+};
+
+$("#send").onclick = () => {
+  const name = $("#nm").value.trim(), phone = $("#em").value.trim(), ok = $("#ok");
+  ok.hidden = false;
+  if (!name || phone.replace(/\D/g, "").length < 8) { ok.className = "err"; ok.textContent = T[lang].err; return; }
+  if (!HAS) { ok.className = "err"; ok.textContent = "azador.js غير موجود: ضعه في نفس مجلد index.html"; return; }
+  const o = AZ.DB.create({ name, phone, lang, type: mode,
+    options: O.filter(x => sel.has(x.id)).map(x => ({ id: x.id, t: x.t })),
+    budget: mode === "budget" && !later ? +$("#bud").value : null, budgetLater: mode === "budget" && later,
+    freeText: $("#idea").value.trim() });
+  ok.className = ""; ok.textContent = T[lang].ok;
+  $("#send").disabled = true;
+  setTimeout(() => location.href = "client.html?order=" + o.id, 800);
+};
+
+/* إضاءة تتبع المؤشر على البطاقات */
+document.addEventListener("pointermove", e => {
+  const c = e.target.closest(".fx"); if (!c) return;
+  const r = c.getBoundingClientRect();
+  c.style.setProperty("--mx", e.clientX - r.left + "px"); c.style.setProperty("--my", e.clientY - r.top + "px");
+});
+
+/* الظهور التدريجي (استبدله لاحقاً بـ GSAP إن أردت) */
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .12 });
+$$("[data-a]").forEach(e => io.observe(e));
+
+/* Boot */
+if (store("mode")) document.documentElement.dataset.theme = store("mode");
+setLang(lang);
+</script>
+</body>
+</html>

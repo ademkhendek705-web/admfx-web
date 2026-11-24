@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AZADOR-web | Chat</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="azador.css">
+<style>
+.cl{display:grid;grid-template-columns:1fr 330px;gap:1.2rem;padding-block:1.5rem;align-items:start}
+@media(max-width:860px){.cl{grid-template-columns:1fr}}
+.side h3{margin-top:1.2rem}.side h3:first-child{margin-top:0}
+.idea{margin-top:.8rem;padding:.8rem 1rem;background:var(--s2);border-radius:12px;font-size:.95rem;white-space:pre-wrap;overflow-wrap:anywhere}
+.nf{grid-column:1/-1;text-align:center;padding:3rem 1rem;display:grid;gap:1rem;justify-items:center}
+</style>
+</head>
+<body>
+<header class="hdr"><div class="wrap">
+  <a href="index.html" class="logo">AZADOR<span>-web</span></a>
+  <div class="act">
+    <span class="tag" id="oid" dir="ltr"></span>
+    <div class="lang"><button data-l="ar">AR</button><button data-l="fr">FR</button><button data-l="en">EN</button></div>
+    <button id="themeBtn" class="btn gh sm"></button>
+  </div>
+</div></header>
+<main class="wrap cl" id="app">
+  <section class="card chat enter" id="chat"></section>
+  <aside class="card side" id="side"></aside>
+</main>
+
+<script src="azador.js"></script>
+<script>if(typeof AZ==="undefined")document.body.innerHTML='<p style="padding:2rem;font:700 18px/1.8 sans-serif;color:#ff6b7a;direction:rtl">ملف azador.js غير موجود. ضع index.html وclient.html وadmin.html وazador.js وazador.css كلها في نفس المجلد ثم حدّث الصفحة.</p>'</script>
+<script>
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const X = {
+ar:{st:"حالة طلبك",req:"ملخص طلبك",ph:"اكتب رسالتك...",send:"إرسال",empty:"ابدأ المحادثة: اشرح لي ما تريده وسأرد عليك هنا.",sub:"نرد عليك هنا في أقرب وقت",pr:"السعر المتفق عليه",pd:"المدفوع",bud:"ميزانيتك",later:"الميزانية: نتفق بعد التواصل",nf:"لم نجد هذا الطلب",back:"العودة للرئيسية",th:"الثيم",demo:"معاينة موقعك (Demo)",demoNote:"هذه نسخة للمعاينة والاختبار قبل إتمام الدفع.",openDemo:"فتح الديمو",payT:"الدفع عبر CCP",payNote:"أعجبك الديمو؟ ادفع عبر CCP ثم أرسل تأكيد الدفع (صورة الوصل أو رقم العملية) في الشات. بعد التأكيد يظهر هنا رابط موقعك النهائي.",due:"المبلغ المطلوب",finT:"رابط موقعك النهائي (Final Site URL)",open:"فتح",copy:"نسخ الرابط",copied:"تم النسخ ✓",copyFail:"انسخه يدوياً",demoMsg:"رابط المعاينة (Demo) لتجربة موقعك قبل الدفع",finalMsg:"تم تأكيد الدفع! رابط موقعك النهائي"},
+fr:{st:"Statut de ta commande",req:"Résumé de ta demande",ph:"Écris ton message...",send:"Envoyer",empty:"Lance la discussion : explique-moi ce que tu veux et je te réponds ici.",sub:"On te répond ici au plus vite",pr:"Prix convenu",pd:"Payé",bud:"Ton budget",later:"Budget : on en parle ensemble",nf:"Commande introuvable",back:"Retour à l’accueil",th:"Thème",demo:"Aperçu de ton site (démo)",demoNote:"Version d’aperçu pour tester avant le paiement.",openDemo:"Ouvrir la démo",payT:"Paiement par CCP",payNote:"La démo te plaît ? Paie par CCP puis envoie la preuve (photo du reçu ou numéro d’opération) dans le chat. Après confirmation, le lien final apparaît ici.",due:"Montant à payer",finT:"Lien final de ton site",open:"Ouvrir",copy:"Copier le lien",copied:"Copié ✓",copyFail:"Copie-le à la main",demoMsg:"Lien de la démo pour tester ton site avant le paiement",finalMsg:"Paiement confirmé ! Voici le lien final de ton site"},
+en:{st:"Order status",req:"Your request",ph:"Type your message...",send:"Send",empty:"Start the conversation: tell me what you need and I’ll reply here.",sub:"We reply here as soon as we can",pr:"Agreed price",pd:"Paid",bud:"Your budget",later:"Budget: let’s agree after we talk",nf:"Order not found",back:"Back to home",th:"Theme",demo:"Preview your site (demo)",demoNote:"A preview version to test before payment.",openDemo:"Open demo",payT:"Pay via CCP",payNote:"Happy with the demo? Pay via CCP, then send the proof (receipt photo or transaction number) in the chat. Once confirmed, your final link appears here.",due:"Amount due",finT:"Your final site link",open:"Open",copy:"Copy link",copied:"Copied ✓",copyFail:"Copy it manually",demoMsg:"Demo link to test your site before payment",finalMsg:"Payment confirmed! Here is your final site link"}
+};
+const id = new URLSearchParams(location.search).get("order") || "";
+let lang = X[AZ.ls("lang")] ? AZ.ls("lang") : "ar", off;
+
+function side() {
+  const o = AZ.DB.get(id), L = X[lang]; if (!o || !$("#side")) return;
+  const i = AZ.STAGES.indexOf(o.status === "closed" ? "delivered" : o.status), e = AZ.esc, m = n => AZ.money(n, lang);
+  const due = Math.max(0, o.price - AZ.paid(o)), ccp = AZ.ls("ccp");
+  $("#oid").textContent = o.id; $("#oid").dataset.s = o.status;
+  let dl = "";
+  if (o.unlocked && o.finalUrl) { // بعد تأكيد الدفع: الرابط النهائي + زر النسخ
+    dl = `<div class="dlv fin"><h3>${L.finT}</h3><code dir="ltr">${e(o.finalUrl)}</code><div class="lka"><a class="btn gh sm" href="${e(o.finalUrl)}" target="_blank" rel="noopener">${L.open}</a><button type="button" class="btn pri sm" data-copy="${e(o.finalUrl)}" data-t="${L.copy}" data-ok="${L.copied}" data-f="${L.copyFail}" aria-live="polite">${L.copy}</button></div></div>`;
+  } else if (o.demoUrl) { // قبل الدفع: الديمو + تعليمات CCP
+    dl = `<div class="dlv"><h3>${L.demo}</h3><p class="muted">${L.demoNote}</p><div class="lka"><a class="btn pri sm" href="${e(o.demoUrl)}" target="_blank" rel="noopener">${L.openDemo}</a></div></div>`
+      + `<div class="dlv"><h3>${L.payT}</h3><p class="muted">${L.payNote}</p>${due ? `<div class="kv"><span>${L.due}</span><b>${m(due)}</b></div>` : ""}${ccp ? `<p class="idea">${e(ccp)}</p>` : ""}</div>`;
+  }
+  $("#side").innerHTML = `<h3>${L.st}</h3><ol class="stages">${AZ.STAGES.map((s, k) => `<li class="${k < i ? "done" : k === i ? "cur" : ""}">${AZ.ST[s][lang]}</li>`).join("")}</ol>`
+    + (o.price ? `<div class="kv"><span>${L.pr}</span><b>${m(o.price)}</b></div><div class="kv"><span>${L.pd}</span><b>${m(AZ.paid(o))}</b></div>` : "")
+    + dl
+    + `<h3>${L.req}</h3><div class="chips">${o.options.map(x => `<span class="tag">${e(x.t[lang])}</span>`).join("")}</div>`
+    + (o.budget ? `<div class="kv"><span>${L.bud}</span><b>${m(o.budget)}</b></div>` : o.budgetLater ? `<p class="muted">${L.later}</p>` : "")
+    + (o.freeText ? `<p class="idea">${e(o.freeText)}</p>` : "");
+}
+
+function paint() {
+  const L = X[lang], h = document.documentElement;
+  h.lang = lang; h.dir = lang === "ar" ? "rtl" : "ltr";
+  $$(".lang button").forEach(b => b.classList.toggle("on", b.dataset.l === lang));
+  $("#themeBtn").textContent = L.th;
+  if (!AZ.DB.get(id)) { $("#app").innerHTML = `<div class="card nf"><h2>${L.nf}</h2><a class="btn pri" href="index.html">${L.back}</a></div>`; return; }
+  side(); off && off();
+  off = AZ.Chat.mount($("#chat"), id, "client", { ...L, lang, title: "AZADOR-web" });
+}
+
+$$(".lang button").forEach(b => b.onclick = () => { lang = b.dataset.l; AZ.ls("lang", lang); paint(); });
+$("#themeBtn").onclick = AZ.Theme.toggle;
+AZ.DB.on(side);
+paint();
+</script>
+</body>
+</html>
