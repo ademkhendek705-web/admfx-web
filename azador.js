@@ -1,4 +1,4 @@
-/* AZADOR core: طبقة البيانات المشتركة بين كل الصفحات (Firebase Firestore + Auth). */
+/* AZADOR core: طبقة البيانات المشتركة بين كل الصفحات (Firebase Firestore). */
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyANUAd9bj7-eCJsA4VQuOegFhaFJaborrc",
   authDomain: "azador-web.firebaseapp.com",
@@ -12,22 +12,20 @@ const AZ = (() => {
   const ls = (k, v) => { try { return v === undefined ? localStorage.getItem(k) : localStorage.setItem(k, v); } catch (e) {} };
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => "&#" + c.charCodeAt(0) + ";");
   const fmt = (t, l = "ar") => new Intl.DateTimeFormat(l === "ar" ? "ar-u-nu-latn" : l, { hour: "2-digit", minute: "2-digit" }).format(t);
-  const cur = { ar: "دج", fr: "DA", en: "DA" }; // العملة: الدينار الجزائري
+  const cur = { ar: "دج", fr: "DA", en: "DA" };
   const money = (n, l = "ar") => Math.round(n || 0).toLocaleString("en") + " " + cur[l];
   const paid = o => o.payments.reduce((a, x) => a + x.amount, 0);
   const waiting = o => { let c = 0; for (let i = o.messages.length - 1; i >= 0 && o.messages[i].from === "client"; i--) c++; return c; };
-  // رابط آمن: "" فارغ، null غير صالح، وإلا http(s) فقط
   const url = u => { u = (u || "").trim(); if (!u) return ""; if (!/^https?:\/\//i.test(u)) u = "https://" + u; return /^https?:\/\/[^\s"'<>]+$/i.test(u) ? u : null; };
   const copy = async t => {
     try { await navigator.clipboard.writeText(t); return true; }
     catch (e) { const a = document.createElement("textarea"); a.value = t; a.style.cssText = "position:fixed;opacity:0"; document.body.append(a); a.select(); let ok = false; try { ok = document.execCommand("copy"); } catch (e2) {} a.remove(); return ok; }
   };
-  const WA_NUMBER = "0770990341"; // رقم واتساب الوكالة: غيّره هنا فقط
-  const WA_INTL = "213" + WA_NUMBER.replace(/^0/, ""); // الصيغة الدولية: 213770990341
+  const WA_NUMBER = "0770990341";
+  const WA_INTL = "213" + WA_NUMBER.replace(/^0/, "");
   const wa = (text, to = WA_INTL) => "https://wa.me/" + to + (text ? "?text=" + encodeURIComponent(text) : "");
-  const waTo = p => { let d = String(p || "").replace(/\D/g, ""); if (d.startsWith("00")) d = d.slice(2); else if (d.startsWith("0")) d = "213" + d.slice(1); return d; }; // رقم زبون ← دولي
-  const ccp = () => ccpInfo; // حساب CCP الخاص بالأدمن (يأتي من Firestore: settings/ccp) // حساب CCP الخاص بالأدمن
-  // تحقق CCP: err[field] = "req" | "fmt"
+  const waTo = p => { let d = String(p || "").replace(/\D/g, ""); if (d.startsWith("00")) d = d.slice(2); else if (d.startsWith("0")) d = "213" + d.slice(1); return d; };
+  const ccp = () => ccpInfo;
   const ccpCheck = v => {
     const num = String(v.num || "").replace(/[\s.-]/g, ""), key = String(v.key || "").trim(), name = String(v.name || "").trim().replace(/\s+/g, " "), ref = String(v.ref || "").trim().toUpperCase(), err = {};
     if (!num) err.num = "req"; else if (!/^\d{6,10}$/.test(num) || /^(\d)\1+$/.test(num)) err.num = "fmt";
@@ -47,28 +45,28 @@ const AZ = (() => {
   };
   const STAGES = ["new", "reviewing", "quoted", "in_progress", "delivered"];
 
-  /* ===== Firestore: orders/{id} + finals/{id} (الرابط النهائي منفصل ليبقى مخفياً) + settings/ccp ===== */
+  /* ===== Firestore: orders/{id} + finals/{id} + settings/ccp ===== */
   const hasFb = typeof firebase !== "undefined";
-  let fs = null, auth = null, ccpInfo = {}, cache = [];
+  let fs = null, ccpInfo = {}, cache = [];
   if (hasFb) {
     firebase.initializeApp(FIREBASE_CONFIG);
-    fs = firebase.firestore(); fs.settings({ experimentalAutoDetectLongPolling: true, merge: true });
-    try { if (firebase.auth) auth = firebase.auth(); } catch (e) { console.warn("Auth init:", e.code || e.message); }
+    fs = firebase.firestore();
+    fs.settings({ experimentalAutoDetectLongPolling: true, merge: true });
   }
   const MSG = { ar: "تعذّر الحفظ، تحقق من الاتصال وأعد المحاولة", fr: "Échec de l’enregistrement, vérifie ta connexion", en: "Couldn’t save, check your connection" };
   const toast = m => { const d = document.createElement("div"); d.className = "toast"; d.setAttribute("role", "alert"); d.textContent = m; document.body.append(d); setTimeout(() => d.remove(), 4500); };
   const fail = e => { console.error(e); toast(MSG[document.documentElement.lang] || MSG.en); };
   const col = n => { if (!fs) throw new Error("Firebase SDK missing"); return fs.collection(n); };
-  const clean = o => JSON.parse(JSON.stringify(o)); // يحذف undefined
+  const clean = o => JSON.parse(JSON.stringify(o));
   const CH = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", finals = {}, wf = {}, subs = new Set(), emit = () => subs.forEach(f => f());
   const watchCcp = () => new Promise(r => col("settings").doc("ccp").onSnapshot(s => { ccpInfo = s.exists ? s.data() : {}; emit(); r(); }, () => r()));
 
   const DB = {
     all: () => cache,
     get(id) { const o = cache.find(x => x.id === id); return o && finals[id] ? { ...o, finalUrl: finals[id] } : o; },
-    newId: () => "AZD-" + Array.from({ length: 8 }, () => CH[Math.random() * CH.length | 0]).join(""), // 8 رموز: يصعب تخمينه
+    newId: () => "AZD-" + Array.from({ length: 8 }, () => CH[Math.random() * CH.length | 0]).join(""),
     on(f) { subs.add(f); return () => subs.delete(f); },
-    async create(o) { // يحفظ الطلب برقم فريد ويُرجعه فوراً
+    async create(o) {
       for (let i = 0; i < 5; i++) {
         const id = this.newId(), ref = col("orders").doc(id), ord = clean({ status: "new", price: 0, payments: [], messages: [], createdAt: Date.now(), ...o });
         try { await fs.runTransaction(async t => { if ((await t.get(ref)).exists) throw new Error("dup"); t.set(ref, ord); }); return { id, ...ord }; }
@@ -76,12 +74,12 @@ const AZ = (() => {
       }
       throw new Error("id-collision");
     },
-    update(id, fn) { // قراءة-تعديل-كتابة ذرّية: لا تضيع رسائل من جهازين
+    update(id, fn) {
       const ref = col("orders").doc(id);
       return fs.runTransaction(async t => { const s = await t.get(ref); if (!s.exists) return; const o = s.data(); fn(o); t.set(ref, clean(o)); }).catch(fail);
     },
     say(id, from, text) { return col("orders").doc(id).update({ messages: firebase.firestore.FieldValue.arrayUnion({ from, text, t: Date.now() }) }).catch(fail); },
-    watch(id) { // صفحة الزبون: مستمع لطلبه فقط
+    watch(id) {
       return new Promise((res, rej) => {
         let first = true;
         col("orders").doc(id).onSnapshot(s => {
@@ -91,7 +89,7 @@ const AZ = (() => {
         }, e => { if (first) { first = false; rej(e); } else fail(e); });
       });
     },
-    watchAll() { // لوحة الأدمن: كل الطلبات لحظياً
+    watchAll() {
       return new Promise((res, rej) => {
         let first = true;
         col("orders").onSnapshot(s => { cache = s.docs.map(d => ({ id: d.id, ...d.data() })); if (first) { first = false; watchCcp().then(res); } emit(); }, e => { if (first) { first = false; rej(e); } else fail(e); });
@@ -121,8 +119,8 @@ const AZ = (() => {
           const d = document.createElement("div"), tm = `<time>${fmt(m.t, L.lang)}</time>`, lk = m.kind === "demo" || m.kind === "final",
             sys = { paysub: L.sysSub, payok: L.sysOk, payno: L.sysNo }[m.kind];
           d.className = "msg " + (sys ? "sys" : m.from === me ? "me" : "them") + (lk ? " lk" : "");
-          if (sys) d.innerHTML = `<div class="sysn ${m.kind}">${esc(sys)}${m.text ? " — " + esc(m.text) : ""}</div>${tm}`; // إشعار تلقائي
-          else if (lk) { // ديمو: زر معاينة بلا كشف الرابط للزبون (والرابط للأدمن)؛ نهائي: رابط + زر نسخ
+          if (sys) d.innerHTML = `<div class="sysn ${m.kind}">${esc(sys)}${m.text ? " — " + esc(m.text) : ""}</div>${tm}`;
+          else if (lk) {
             const fin = m.kind === "final", u = esc(m.url), buy = L.buy ? `<button type="button" class="btn pri sm" data-buy>${esc(L.buy)}</button>` : "";
             d.innerHTML = fin
               ? `<div class="lkc"><b>${esc(L.finalMsg)}</b><code dir="ltr">${u}</code><div class="lka"><a class="btn gh sm" href="${u}" target="_blank" rel="noopener">${esc(L.open)}</a><button type="button" class="btn pri sm" data-copy="${u}" data-t="${esc(L.copy)}" data-ok="${esc(L.copied)}" data-f="${esc(L.copyFail)}" aria-live="polite">${esc(L.copy)}</button></div></div>${tm}`
@@ -148,7 +146,7 @@ const AZ = (() => {
   };
   Theme.init();
 
-  document.addEventListener("click", e => { // زر النسخ العام (يعمل في الشات وصفحة المتابعة)
+  document.addEventListener("click", e => {
     const b = e.target.closest("[data-copy]"); if (!b) return;
     copy(b.dataset.copy).then(ok => {
       b.textContent = ok ? b.dataset.ok : b.dataset.f; b.classList.toggle("done", ok);
@@ -156,5 +154,5 @@ const AZ = (() => {
     });
   });
 
-  return { ls, esc, fmt, cur, money, paid, waiting, url, copy, ccp, ccpCheck, wa, waTo, WA_NUMBER, auth, toast, ST, STAGES, DB, Chat, Theme };
+  return { ls, esc, fmt, cur, money, paid, waiting, url, copy, ccp, ccpCheck, wa, waTo, WA_NUMBER, toast, ST, STAGES, DB, Chat, Theme };
 })();

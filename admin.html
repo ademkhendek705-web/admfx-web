@@ -6,8 +6,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="azador.css">
 <style>
-.login{min-height:100vh;display:grid;place-items:center}
-.login form{width:min(380px,100%);display:grid;gap:.9rem}
 main{padding-block:1.5rem}
 .ord{display:grid;grid-template-columns:300px 1fr;gap:1rem;align-items:start}
 @media(max-width:860px){.ord{grid-template-columns:1fr}}
@@ -37,25 +35,13 @@ th,td{padding:.65rem .9rem;text-align:start;border-block-end:1px solid var(--bd)
 </head>
 <body>
 
-<div id="login" class="wrap login">
-  <form class="card" id="lf">
-    <h2>AZADOR<span style="color:var(--primary)">-admin</span></h2>
-    <input type="email" id="em" placeholder="البريد الإلكتروني" autocomplete="username" dir="ltr" autofocus>
-    <input type="password" id="pw" placeholder="كلمة السر" autocomplete="current-password">
-    <label class="chk"><input type="checkbox" id="sp"><span>إظهار كلمة السر</span></label>
-    <button class="btn pri">دخول</button>
-    <p class="err" id="le"></p>
-  </form>
-</div>
-
-<div id="app" hidden>
+<div id="app">
   <header class="hdr"><div class="wrap">
     <a href="#" class="logo">AZADOR<span>-admin</span></a>
     <nav class="tabs" id="nav"><button data-v="orders">الطلبات</button><button data-v="finance">الأسعار والمداخيل</button><button data-v="stats">الإحصائيات</button></nav>
     <div class="act">
       <input type="color" id="pc" title="اللون الأساسي">
       <button id="themeBtn" class="btn gh sm">الثيم</button>
-      <button id="out" class="btn gh sm">خروج</button>
     </div>
   </div></header>
   <main class="wrap">
@@ -72,7 +58,6 @@ th,td{padding:.65rem .9rem;text-align:start;border-block-end:1px solid var(--bd)
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="azador.js"></script>
 <script>if(typeof AZ==="undefined")document.body.innerHTML='<p style="padding:2rem;font:700 18px/1.8 sans-serif;color:#ff6b7a;direction:rtl">ملف azador.js غير موجود. ضع index.html وclient.html وadmin.html وazador.js وazador.css كلها في نفس المجلد ثم حدّث الصفحة.</p>'</script>
 <script>
@@ -150,10 +135,10 @@ function open(id) {
   $("#st").onchange = () => DB.update(id, x => { x.status = $("#st").value; });
   $("#sv").onclick = () => { DB.update(id, x => { x.price = +$("#pr").value || 0; const a = +$("#pay").value; if (a > 0) x.payments.push({ amount: a, t: Date.now() }); }); $("#pay").value = ""; };
   const say = (t, ok) => { $("#dmsg").className = ok ? "muted" : "err"; $("#dmsg").textContent = t; };
-  const urls = () => { // حفظ الروابط بعد التحقق (http/https فقط)
+  const urls = () => {
     const d = AZ.url($("#du").value), f = AZ.url($("#fu").value);
     if (d === null || f === null) { say("رابط غير صالح: يجب أن يبدأ بـ http:// أو https://"); return null; }
-    $("#du").value = d; $("#fu").value = f; DB.update(id, x => { x.demoUrl = d; }); if (f) DB.setFinal(id, f); return { d, f }; // الرابط النهائي في مجموعة finals المحمية
+    $("#du").value = d; $("#fu").value = f; DB.update(id, x => { x.demoUrl = d; }); if (f) DB.setFinal(id, f); return { d, f };
   };
   $("#svu").onclick = () => urls() && say("تم حفظ الروابط ✓", 1);
   $("#sd").onclick = () => {
@@ -165,7 +150,7 @@ function open(id) {
     DB.update(id, x => { if (!x.ccp) return; x.ccp.status = "rejected"; x.ccp.reason = why.trim() || "—"; x.ccp.verifiedAt = Date.now(); x.messages.push({ from: "admin", kind: "payno", text: x.ccp.reason, t: Date.now() }); });
     say("تم رفض الدفع وأُبلغ الزبون ✓", 1);
   };
-  $("#act").onclick = () => { // تأكيد CCP: يسجّل المتبقي كدفعة، ويفتح الرابط النهائي للزبون
+  $("#act").onclick = () => {
     const u = urls(); if (!u) return; if (!u.f) return say("أدخل رابط الموقع النهائي أولاً");
     const o2 = DB.get(id), price = +$("#pr").value || o2.price; if (!price) return say("حدّد السعر المتفق عليه أولاً");
     const due = Math.max(0, price - paid(o2));
@@ -232,30 +217,6 @@ $("#list").onclick = e => {
   else if (e.target.id === "seed") seed();
   else if (e.target.id === "clr" && confirm("مسح كل الطلبات؟")) { cur = null; off && off(); $("#detail").innerHTML = EMPTY; DB.clear(); }
 };
-$("#lf").onsubmit = async e => { // دخول حقيقي عبر Firebase Auth
-  e.preventDefault(); $("#le").textContent = "";
-  if (!AZ.auth) { // تشخيص دقيق لسبب الفشل
-    $("#le").textContent = !("auth" in AZ) ? "ملف azador.js قديم: استبدله بالنسخة الجديدة ثم حدّث الصفحة."
-      : location.protocol === "file:" ? "الصفحة مفتوحة من ملف (file://). شغّلها عبر Live Server أو استضافة."
-      : typeof firebase === "undefined" || !firebase.auth ? "لم يُحمَّل Firebase: تحقق من الإنترنت أو من حجب gstatic.com."
-      : "تعذّرت تهيئة Firebase Auth: افتح Console (F12) وأرسل لي الخطأ.";
-    return;
-  }
-  try { await AZ.auth.signInWithEmailAndPassword($("#em").value.trim(), $("#pw").value); }
-  catch (err) { // رسالة دقيقة حسب سبب الفشل
-    const bad = "البريد أو كلمة السر غير صحيحة، أو لم يُنشأ هذا المستخدم بعد في Authentication ← Users. (كلمة السر هي التي كتبتها عند Add user وليست كلمة سر Gmail)";
-    const M = { "auth/invalid-credential": bad, "auth/wrong-password": bad, "auth/user-not-found": bad,
-      "auth/invalid-email": "صيغة البريد الإلكتروني غير صحيحة.",
-      "auth/operation-not-allowed": "فعّل Email/Password من Authentication ← Sign-in method.",
-      "auth/too-many-requests": "محاولات كثيرة، انتظر بضع دقائق ثم أعد المحاولة.",
-      "auth/network-request-failed": "تحقق من اتصال الإنترنت.",
-      "auth/user-disabled": "هذا الحساب معطّل في Firebase.",
-      "auth/operation-not-supported-in-this-environment": "افتح الصفحة عبر http/https (Live Server أو استضافة) وليس file://" };
-    $("#le").textContent = (M[err.code] || "خطأ غير متوقع") + " (" + (err.code || err.message) + ")";
-  }
-};
-$("#sp").onchange = e => { $("#pw").type = e.target.checked ? "text" : "password"; };
-$("#out").onclick = async () => { AZ.auth && await AZ.auth.signOut(); location.reload(); };
 $("#themeBtn").onclick = AZ.Theme.toggle;
 $("#pc").value = AZ.ls("primary") || "#7c5cff";
 $("#pc").oninput = e => AZ.Theme.primary(e.target.value);
@@ -269,18 +230,13 @@ $("#v-finance").oninput = e => {
   $("#cmsg").textContent = bad.length ? "⚠ تحقق من: " + bad.map(k => L[k]).join("، ") : "✓ تم الحفظ";
 };
 
-let started = false;
-async function enter() {
-  $("#login").hidden = true; $("#app").hidden = false; $("#detail").innerHTML = EMPTY;
-  if (!started) { // مستمع onSnapshot لكل الطلبات: تظهر الجديدة فوراً من أي جهاز
-    started = true;
-    try { await DB.watchAll(); }
-    catch (e) { started = false; console.error(e); $("#list").innerHTML = `<p class="err" style="padding:1rem">تعذّر تحميل الطلبات. تحقق من قواعد Firestore وUID الأدمن (${esc(e.code || e.message)})</p>`; return; }
-  }
+(async function init() {
+  $("#detail").innerHTML = EMPTY;
+  try { await DB.watchAll(); }
+  catch (e) { console.error(e); $("#list").innerHTML = `<p class="err" style="padding:1rem">تعذّر تحميل الطلبات. تحقق من إعدادات وقاعدة Firestore (${esc(e.code || e.message)})</p>`; return; }
   fillCcp(); list(); show("orders");
-}
+})();
 DB.on(refresh);
-AZ.auth && AZ.auth.onAuthStateChanged(u => u && enter());
 </script>
 </body>
 </html>
