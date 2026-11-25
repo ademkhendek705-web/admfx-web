@@ -42,6 +42,7 @@ th,td{padding:.65rem .9rem;text-align:start;border-block-end:1px solid var(--bd)
     <h2>AZADOR<span style="color:var(--primary)">-admin</span></h2>
     <input type="email" id="em" placeholder="البريد الإلكتروني" autocomplete="username" dir="ltr" autofocus>
     <input type="password" id="pw" placeholder="كلمة السر" autocomplete="current-password">
+    <label class="chk"><input type="checkbox" id="sp"><span>إظهار كلمة السر</span></label>
     <button class="btn pri">دخول</button>
     <p class="err" id="le"></p>
   </form>
@@ -241,8 +242,19 @@ $("#lf").onsubmit = async e => { // دخول حقيقي عبر Firebase Auth
     return;
   }
   try { await AZ.auth.signInWithEmailAndPassword($("#em").value.trim(), $("#pw").value); }
-  catch (err) { $("#le").textContent = /not-supported/.test(err.code) ? "افتح الصفحة عبر http/https (Live Server أو استضافة) وليس file://" : "البريد الإلكتروني أو كلمة السر غير صحيحة"; }
+  catch (err) { // رسالة دقيقة حسب سبب الفشل
+    const bad = "البريد أو كلمة السر غير صحيحة، أو لم يُنشأ هذا المستخدم بعد في Authentication ← Users. (كلمة السر هي التي كتبتها عند Add user وليست كلمة سر Gmail)";
+    const M = { "auth/invalid-credential": bad, "auth/wrong-password": bad, "auth/user-not-found": bad,
+      "auth/invalid-email": "صيغة البريد الإلكتروني غير صحيحة.",
+      "auth/operation-not-allowed": "فعّل Email/Password من Authentication ← Sign-in method.",
+      "auth/too-many-requests": "محاولات كثيرة، انتظر بضع دقائق ثم أعد المحاولة.",
+      "auth/network-request-failed": "تحقق من اتصال الإنترنت.",
+      "auth/user-disabled": "هذا الحساب معطّل في Firebase.",
+      "auth/operation-not-supported-in-this-environment": "افتح الصفحة عبر http/https (Live Server أو استضافة) وليس file://" };
+    $("#le").textContent = (M[err.code] || "خطأ غير متوقع") + " (" + (err.code || err.message) + ")";
+  }
 };
+$("#sp").onchange = e => { $("#pw").type = e.target.checked ? "text" : "password"; };
 $("#out").onclick = async () => { AZ.auth && await AZ.auth.signOut(); location.reload(); };
 $("#themeBtn").onclick = AZ.Theme.toggle;
 $("#pc").value = AZ.ls("primary") || "#7c5cff";
